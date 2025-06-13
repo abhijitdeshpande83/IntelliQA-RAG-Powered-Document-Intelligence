@@ -1,0 +1,21 @@
+Metadata-Version: 2.4
+Name: rag_pipeline
+Version: 2.0
+Summary: RAG Pipeline for IntelliQA project - Added remote Tika server support and improved file parsing logic
+Author: Abhijit Deshpande
+Requires-Python: >=3.10
+Requires-Dist: langchain
+Requires-Dist: tika
+Requires-Dist: python-dotenv
+Requires-Dist: langchain_chroma
+Requires-Dist: langchain_core
+Requires-Dist: langchain_text_splitters
+Requires-Dist: langchain_openai
+Requires-Dist: langchain_community
+Requires-Dist: langchain_experimental
+Requires-Dist: langchain_huggingface
+Requires-Dist: sentence_transformers
+Dynamic: author
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary

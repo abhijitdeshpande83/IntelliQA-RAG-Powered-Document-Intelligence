@@ -1,0 +1,11 @@
+langchain
+tika
+python-dotenv
+langchain_chroma
+langchain_core
+langchain_text_splitters
+langchain_openai
+langchain_community
+langchain_experimental
+langchain_huggingface
+sentence_transformers
