@@ -1,0 +1,26 @@
+# Documentation files
+README.md
+docs/
+
+# Setup/config files (optional)
+setup.py
+
+# ChromaDB
+chroma_db/
+
+# Python cache / logs
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+
+# Virtual environments
+venv/
+.env/
+
+# Git/system files
+.git/
+.gitignore
+.DS_Store
+
