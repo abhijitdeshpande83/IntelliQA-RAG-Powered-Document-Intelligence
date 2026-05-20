@@ -3,8 +3,8 @@ import re
 from tika import tika
 
 # Point tika client to remote server 
-tika.TikaClientOnly = True
-tika.TikaServerEndpoint = "http://tika:9998"
+# tika.TikaClientOnly = True
+# tika.TikaServerEndpoint = "http://tika:9998"
 
 from tika import parser
 

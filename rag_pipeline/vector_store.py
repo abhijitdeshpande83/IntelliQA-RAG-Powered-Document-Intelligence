@@ -20,7 +20,7 @@ def create_vector_db(texts, persist_directory,embedding=embeddings):
         vectorstore = Chroma(persist_directory=persist_directory,
                                 embedding_function=embedding
                                 )
-        vectorstore.add_texts(texts=texts)
+        vectorstore.add_documents(documents=texts)
 
     return vectorstore
         

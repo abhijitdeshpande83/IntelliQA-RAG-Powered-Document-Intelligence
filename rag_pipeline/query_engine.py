@@ -3,14 +3,14 @@ import re
 from tika import parser
 import warnings
 from rag_pipeline.utils import parse
-from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
 from langchain.chains import RetrievalQA
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema import Document
 from rag_pipeline.vector_store import create_vector_db, load_vector_db
 warnings.filterwarnings("ignore")
 
-llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0, openai_api_key=os.getenv("OPENAI_API_KEY"))
+llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0, groq_api_key=os.getenv("GROQ_API_KEY"))
 
 
 def load_data(file_path, session_id):
