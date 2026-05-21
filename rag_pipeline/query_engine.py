@@ -13,14 +13,17 @@ warnings.filterwarnings("ignore")
 llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0, groq_api_key=os.getenv("GROQ_API_KEY"))
 
 
-def load_data(file_path, session_id):
+def load_data(file_path, session_id, file_name):
     # path = os.getcwd()+'/data'
     # files = get_file(path)
     text = parse(file_path)
 
     doc = Document(
             page_content=text, 
-            metadata={"session_id": session_id}
+            metadata={
+                "session_id": session_id,
+                "filename": file_name
+                }
             )
     
     text_splitter = RecursiveCharacterTextSplitter(
@@ -31,9 +34,9 @@ def load_data(file_path, session_id):
     chunks = text_splitter.split_documents([doc])
     return chunks
 
-def vectorstore(persist_directory="chroma_db",texts=None):
-    if texts:
-        return create_vector_db(persist_directory=persist_directory,texts=texts)
+def vectorstore(persist_directory="chroma_db",documents=None):
+    if documents:
+        return create_vector_db(persist_directory=persist_directory, documents=documents)
     else:
         return load_vector_db(persist_directory=persist_directory)
 
