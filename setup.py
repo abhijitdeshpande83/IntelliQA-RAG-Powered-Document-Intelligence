@@ -9,7 +9,6 @@ setup(
         "langchain-core>=0.3.78,<1.0",
         "langchain-community>=0.3.29,<0.4",
         "langchain-text-splitters>=0.3.11,<0.4",
-        "langchain-openai>=0.3.35,<0.4",
         "langchain-experimental>=0.3,<0.4",
         "langchain-huggingface>=0.3,<1.0",
         "langchain-chroma>=0.2,<0.3",

@@ -7,20 +7,20 @@ embeddings = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-MiniLM-L6-v2"
     )
 
-def create_vector_db(texts, persist_directory,embedding=embeddings):
+def create_vector_db(documents, persist_directory, embedding=embeddings):
     if not os.path.exists(persist_directory):
         print("Creating vector space")
-        vectorstore =  Chroma.from_texts(texts=texts,
+        vectorstore =  Chroma.from_documents(documents=documents,
                                      embedding=embedding,
                                      persist_directory=persist_directory)
         
 
     else:
-        print("Adding text to existing vector space")
+        print("Adding documents to existing vector space")
         vectorstore = Chroma(persist_directory=persist_directory,
                                 embedding_function=embedding
                                 )
-        vectorstore.add_documents(documents=texts)
+        vectorstore.add_documents(documents=documents)
 
     return vectorstore
         
