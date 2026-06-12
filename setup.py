@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='rag_pipeline',
-    version='3.0',
+    version='3.1',
     packages=find_packages(),
     install_requires=[
         "langchain>=0.3.27,<0.4",

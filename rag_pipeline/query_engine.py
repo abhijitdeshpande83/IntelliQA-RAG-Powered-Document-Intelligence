@@ -2,7 +2,7 @@ import os
 import re
 from tika import parser
 import warnings
-from rag_pipeline.utils import parse
+from rag_pipeline.utils import parse, supported_file_types, get_file_extension
 from langchain_groq import ChatGroq
 from langchain.chains import RetrievalQA
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -12,10 +12,11 @@ warnings.filterwarnings("ignore")
 
 llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0, groq_api_key=os.getenv("GROQ_API_KEY"))
 
+def is_supported_file(file):
+    return get_file_extension(file) in supported_file_types()
 
 def load_data(file_path, session_id, file_name):
-    # path = os.getcwd()+'/data'
-    # files = get_file(path)
+
     text = parse(file_path)
 
     doc = Document(
