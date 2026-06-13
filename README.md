@@ -1,9 +1,13 @@
 # IntelliQA: Document-Grounded RAG System
 
 <p align="center">
-  <a href="https://theanalyticmind.com/projects/IntelliQA/">
-    <img src="https://img.shields.io/badge/Live_Demo-IntelliQA-38bdf8?style=for-the-badge&logo=googlechrome&logoColor=white&labelColor=0f172a" alt="Live Demo: IntelliQA on theanalyticmind.com"/>
+  <a href="https://theanalyticmind.com/projects/intelliqa/">
+    <img
+      src="https://img.shields.io/badge/🚀%20Live%20Demo-IntelliQA-38BDF8?style=for-the-badge&labelColor=0F172A"
+      alt="Live Demo: IntelliQA"
+    />
   </a>
+  <img src="https://img.shields.io/badge/v3.1-22C55E?style=for-the-badge&labelColor=111827" alt="Version 3.1" />
 </p>
 
 ## System Overview
@@ -134,16 +138,16 @@ Even at temperature=0, the LLM occasionally answered from training data when ret
 *Use this if you want IntelliQA as a ready-to-use RAG backend in your own application.* This is the path used by the live portfolio site.
 
 ```bash
-git clone https://github.com/abhijitdeshpande83/GenAI.git
-cd GenAI/IntelliQA
-pip install dist/rag_pipeline-3.0-py3-none-any.whl
-export GROQ_API_KEY="your-key-here"
+git clone https://github.com/abhijitdeshpande83/IntelliQA-RAG-Powered-Document-Intelligence.git
+cd IntelliQA-RAG-Powered-Document-Intelligence
+pip install dist/rag_pipeline-3.1-py3-none-any.whl
+export GROQ_API_KEY="groq-key-here"
 ```
 
 Import and use anywhere:
 
 ```python
-from rag_pipeline import query_engine, vector_store, utils
+from rag_pipeline import query_engine, vector_store, utils, is_supported_file
 ```
 
 The package exposes three modules:
@@ -151,6 +155,7 @@ The package exposes three modules:
 - `rag_pipeline.utils`: parsing, chunking, deduplication
 - `rag_pipeline.vector_store`: Chroma setup and indexing
 - `rag_pipeline.query_engine`: retrieval, prompt assembly, generation
+- `rag_pipeline.is_supported_file`: checks if a file type is supported for RAG ingestion
 
 See `IntelliQA.ipynb` for end-to-end usage examples.
 
@@ -158,8 +163,8 @@ See `IntelliQA.ipynb` for end-to-end usage examples.
 *Use this if you want to read, modify, or extend the core RAG logic.* The editable install (`pip install -e .`) picks up source changes immediately without reinstalling.
 
 ```bash
-git clone https://github.com/abhijitdeshpande83/GenAI.git
-cd GenAI/IntelliQA
+git clone https://github.com/abhijitdeshpande83/IntelliQA-RAG-Powered-Document-Intelligence.git
+cd IntelliQA-RAG-Powered-Document-Intelligence
 
 python -m venv venv
 source venv/bin/activate              # Windows: venv\Scripts\activate
@@ -167,7 +172,7 @@ source venv/bin/activate              # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 pip install -e .
 
-export GROQ_API_KEY="your-key-here"
+export GROQ_API_KEY="groq-key-here"
 jupyter notebook IntelliQA.ipynb
 ```
 
@@ -175,7 +180,7 @@ jupyter notebook IntelliQA.ipynb
 
 |  |  |
 | --- | --- |
-| **Shipped** | Core pipeline, session isolation, upload quota, scheduled cleanup, AWS EC2 deployment, `rag_pipeline-3.0` wheel |
+| **Shipped** | Core pipeline, session isolation, upload quota, scheduled cleanup, AWS EC2 deployment, `rag_pipeline-3.1` wheel |
 | **In progress** | RAG evaluation framework (see below) |
 
 ## 📏 Evaluation Approach
