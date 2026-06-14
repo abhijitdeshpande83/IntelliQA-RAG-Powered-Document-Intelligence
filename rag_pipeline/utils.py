@@ -19,6 +19,9 @@ def get_file_extension(file_name):
     _, ext = os.path.splitext(file_name)
     return ext
 
+def clean_file(file):
+    return re.sub('\n\s+\n+','\n\n',file)
+
 def parse(file):
 
     tika_files = {'.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx'}
@@ -34,20 +37,3 @@ def parse(file):
             data = r.read()
         print(f"Successfully parsed {os.path.basename(file)}")
         return data
-
-def clean_file(file):
-    return re.sub('\n\s+\n+','\n\n',file)
-    
-def text_parser(file_path):
-    text=""
-    n=0
-    # for file in files:   
-    parsed_text = parse(file_path) 
-    if parsed_text:
-        text+=parsed_text+"\n\n"
-        n+=1
-        print(f"Successfully parsed {os.path.basename(file_path)}")
-    else:
-        print(f"Error parsing {os.path.basename(file_path)}")
-    
-    return text, n
