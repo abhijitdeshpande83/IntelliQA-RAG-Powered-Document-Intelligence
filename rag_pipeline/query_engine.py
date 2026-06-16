@@ -56,5 +56,5 @@ def ask_question(Question, vectorstore, session_id):
                 return_source_documents=True
                 )
     response = pipeline.invoke(Question)
-    return response['result']
+    return response
 
