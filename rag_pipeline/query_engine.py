@@ -4,9 +4,9 @@ from tika import parser
 import warnings
 from rag_pipeline.utils import parse, supported_file_types, get_file_extension
 from langchain_groq import ChatGroq
-from langchain.chains import RetrievalQA
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.schema import Document
+from langchain_classic.chains import RetrievalQA
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.documents import Document
 from rag_pipeline.vector_store import create_vector_db, load_vector_db
 warnings.filterwarnings("ignore")
 

@@ -1,4 +1,5 @@
 import os
+from click.core import batch
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 
@@ -6,10 +7,6 @@ from langchain_chroma import Chroma
 embeddings = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-MiniLM-L6-v2"
     )
-
-def batch_iterable(documents, batch_size):  
-     for i in range(0, len(documents), batch_size):
-        yield documents[i:i + batch_size]
 
 def create_vector_db(documents, persist_directory, embedding=embeddings, batch_size=1000):
     if not os.path.exists(persist_directory):
@@ -24,7 +21,8 @@ def create_vector_db(documents, persist_directory, embedding=embeddings, batch_s
         vectorstore = Chroma(persist_directory=persist_directory,
                                 embedding_function=embedding
                                 )
-        for batch in batch_iterable(documents, batch_size):
+        for i in range(0, len(documents), batch_size):
+            batch = documents[i:i + batch_size]
             vectorstore.add_documents(documents=batch)
 
     return vectorstore
