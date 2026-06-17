@@ -42,7 +42,7 @@ def vectorstore(persist_directory="chroma_db",documents=None):
         return load_vector_db(persist_directory=persist_directory)
 
 
-def ask_question(Question, vectorstore, session_id):
+def ask_question(Question, vectorstore, session_id, eval=False):
 
     retriever = vectorstore.as_retriever(
                     search_kwargs={
@@ -56,5 +56,5 @@ def ask_question(Question, vectorstore, session_id):
                 return_source_documents=True
                 )
     response = pipeline.invoke(Question)
-    return response
+    return response['result'] if not eval else response
 
