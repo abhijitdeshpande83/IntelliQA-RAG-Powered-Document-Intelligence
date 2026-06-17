@@ -24,8 +24,8 @@ def clean_file(file):
 
 def parse(file):
 
-    tika_files = {'.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx'}
-    text_files = {'.txt', '.md', '.py', '.ipynb', '.json', '.yaml', '.yml', '.toml', '.csv', '.html', '.xml'}
+    tika_files = {'.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx', '.html', '.xml'}
+    text_files = {'.txt', '.md', '.py', '.ipynb', '.json', '.yaml', '.yml', '.toml', '.csv', }
 
     if get_file_extension(file) in tika_files:
         context = parser.from_file(file)
