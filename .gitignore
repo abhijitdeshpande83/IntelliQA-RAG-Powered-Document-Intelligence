@@ -1,10 +1,10 @@
 .env
 .DS_Store
 ._*
+cu.sh
 
 # IntelliQA Project
 
 /venv
 /chroma_db
-/data/
 __pycache__
