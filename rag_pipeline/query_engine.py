@@ -82,29 +82,33 @@ def vectorstore(persist_directory="chroma_db", documents=None):
         return load_vector_db(persist_directory=persist_directory)
 
 
-def ask_question(Question, vectorstore, session_id, eval=False):
+def ask_question(Question, vectorstore, session_id, eval=False, k=4, search_type="similarity"):
     """
     Runs a Retrieval-Augmented Generation (RAG) pipeline for a query.
 
     Retrieves relevant documents filtered by session_id and generates
-    a response using an LLM. Optionally returns full retrieval context
-    for evaluation purposes.
+    a response using an LLM. Optionally returns the complete retrieval
+    output for evaluation purposes.
 
     Args:
-        Question (str): Input query.
+        question (str): Input query.
         vectorstore: Vector database for retrieval.
         session_id (str): Session filter for retrieval.
-        eval (bool): If True, returns full response including sources.
+        eval (bool, optional): Return full pipeline output instead of only the answer. Defaults to False.
+        k (int, optional): Number of documents to retrieve. Defaults to 4.
+        search_type (str, optional): Retrieval strategy (e.g., "similarity", "mmr"). Defaults to "similarity".
 
     Returns:
-        str or dict:
-            - If eval=False → generated answer (str)
-            - If eval=True → full response dict with sources
+        str | dict:
+            - If eval=False, returns the generated answer.
+            - If eval=True, returns the complete RetrievalQA response.
     """
 
     retriever = vectorstore.as_retriever(
+                    search_type= search_type,
                     search_kwargs={
-                        "filter": {"session_id": session_id}
+                        "filter": {"session_id": session_id},
+                        "k": k
                         }
                     )
 
