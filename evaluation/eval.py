@@ -66,7 +66,7 @@ def generate_qa_dataset(docs, generator_llm, generator_embeddings, run_config, t
 
     return generator.generate_with_langchain_docs(docs, testset_size=test_size, run_config=run_config)
 
-def get_rag_response(question: str, vectorstore_db, session_id: str) -> dict:
+def get_rag_response(question: str, vectorstore_db, session_id: str, k:int, search_type:str):
     """
     Executes the RAG pipeline for a single query.
 
@@ -77,12 +77,14 @@ def get_rag_response(question: str, vectorstore_db, session_id: str) -> dict:
         question (str): User query.
         vectorstore_db: Vector database for retrieval.
         session_id: Session identifier for tracing.
+        k (int): Number of documents to retrieve.
+        search_type (str): Retrieval strategy.
 
     Returns:
         dict: Contains generated answer and retrieved contexts.
     """
 
-    response = ask_question(question, vectorstore_db, session_id, eval=True)
+    response = ask_question(question, vectorstore_db, session_id, eval=True, k=k, search_type=search_type)
     
     answer = response['result']
     contexts = [doc.page_content for doc in response['source_documents']]
@@ -104,7 +106,7 @@ def save_checkpoints(data, file_path):
     with open(file_path, 'a') as f:
         f.write(json.dumps(data) + '\n')
 
-def generate_rag_responses(df, vectorstore_db, session_id):
+def generate_rag_responses(df, vectorstore_db, session_id, k=4, search_type="similarity"):
     """
     Runs the RAG pipeline over a dataset and stores outputs as JSONL.
 
@@ -113,8 +115,11 @@ def generate_rag_responses(df, vectorstore_db, session_id):
 
     Args:
         df (DataFrame): Input dataset containing questions and references.
-        vectorstore_db: Vector database for retrieval.
-        session_id: Session identifier for RAG tracking.
+        vectorstore_db: Vector database used for retrieval.
+        session_id (str): Session identifier for filtering retrieval results.
+        k (int, optional): Number of documents to retrieve. Defaults to 4.
+        search_type (str, optional): Retrieval strategy (e.g., "similarity", "mmr").
+            Defaults to "similarity".
 
     Returns:
         None
@@ -122,7 +127,13 @@ def generate_rag_responses(df, vectorstore_db, session_id):
 
     for i, (_, row) in enumerate(df.iterrows(), start=1):
         try:
-            response = get_rag_response(row.user_input, vectorstore_db, session_id)
+            response = get_rag_response(
+                row.user_input,
+                vectorstore_db,
+                session_id,
+                k=k,
+                search_type=search_type
+            )
 
             result = {
                 "user_input": row.user_input,
