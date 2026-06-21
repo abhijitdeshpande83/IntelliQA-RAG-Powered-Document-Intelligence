@@ -9,6 +9,7 @@ tika.TikaServerEndpoint = "http://tika:9998"
 from tika import parser
 
 def supported_file_types():
+       
     return {
             '.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx', 
             '.txt', '.md', '.py', '.ipynb', '.json', '.yaml', '.yml', 
@@ -16,13 +17,39 @@ def supported_file_types():
             }
     
 def get_file_extension(file_name):
+
     _, ext = os.path.splitext(file_name)
+
     return ext
 
 def clean_file(file):
+    """
+    Cleans raw extracted text by normalizing excessive whitespace.
+
+    Replaces multiple newline and whitespace patterns with
+    standardized line breaks for consistent downstream processing.
+
+    Args:
+        file (str): Raw extracted text.
+
+    Returns:
+        str: Cleaned text.
+    """
     return re.sub('\n\s+\n+','\n\n',file)
 
 def parse(file):
+    """
+    Parses a file and extracts its textual content.
+
+    Uses Apache Tika for complex document formats (PDF, DOCX, PPT, etc.)
+    and direct file reading for plain text and structured text formats.
+
+    Args:
+        file (str): Path to the input file.
+
+    Returns:
+        str: Extracted and cleaned text content.
+    """
 
     tika_files = {'.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx', '.html', '.xml'}
     text_files = {'.txt', '.md', '.py', '.ipynb', '.json', '.yaml', '.yml', '.toml', '.csv', }

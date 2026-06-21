@@ -1,7 +1,7 @@
 import os
 from os import path
 import re
-import pandas as pd
+import json
 from datetime import datetime
 import subprocess
 from pathlib import Path
@@ -9,12 +9,22 @@ from dotenv import load_dotenv
 from ragas import RunConfig
 from ragas.testset import TestsetGenerator   
 load_dotenv()
-from rag_pipeline.query_engine import load_data, vectorstore, ask_question, is_supported_file
-
-
+from rag_pipeline.query_engine import load_data, ask_question, is_supported_file
 
 
 def prepare_testset_documents(eval_data_path):
+    """
+    Loads and prepares documents from a directory for synthetic QA generation.
+
+    Traverses all files in the given path, filters supported file types,
+    and loads them into LangChain-compatible document objects.
+
+    Args:
+        eval_data_path (str): Path to directory containing source documents.
+
+    Returns:
+        list: List of loaded document objects.
+    """
 
     path = Path(eval_data_path)
     files = [str(file) for file in path.rglob("*") if file.is_file()]
@@ -31,8 +41,24 @@ def prepare_testset_documents(eval_data_path):
 
     return docs
 
-def generate_qa_dataset(docs, generator_llm, generator_embeddings,run_config, test_size):        
+def generate_qa_dataset(docs, generator_llm, generator_embeddings, run_config, test_size):
+    """
+    Generates a synthetic QA dataset from input documents using Ragas.
 
+    Uses an LLM and embedding model to create question-answer pairs
+    for evaluation of a RAG pipeline.
+
+    Args:
+        docs (list): Input documents.
+        generator_llm: LLM wrapper used for QA generation.
+        generator_embeddings: Embedding model wrapper.
+        run_config (RunConfig): Execution configuration for generation.
+        test_size (int): Number of QA pairs to generate.
+
+    Returns:
+        Dataset: Generated synthetic QA dataset.
+    """       
+    
     generator = TestsetGenerator(
                                 llm=generator_llm, 
                                 embedding_model=generator_embeddings
@@ -40,7 +66,21 @@ def generate_qa_dataset(docs, generator_llm, generator_embeddings,run_config, te
 
     return generator.generate_with_langchain_docs(docs, testset_size=test_size, run_config=run_config)
 
-def get_rag_response(question: str, vectorstore_db, session_id: str)->dict:
+def get_rag_response(question: str, vectorstore_db, session_id: str) -> dict:
+    """
+    Executes the RAG pipeline for a single query.
+
+    Retrieves relevant context from the vector store and generates an
+    LLM-based response.
+
+    Args:
+        question (str): User query.
+        vectorstore_db: Vector database for retrieval.
+        session_id: Session identifier for tracing.
+
+    Returns:
+        dict: Contains generated answer and retrieved contexts.
+    """
 
     response = ask_question(question, vectorstore_db, session_id, eval=True)
     
@@ -50,31 +90,48 @@ def get_rag_response(question: str, vectorstore_db, session_id: str)->dict:
     return {"answer": answer, "contexts": contexts}
 
 def save_checkpoints(data, file_path):
+    """
+    Appends a single record to a JSONL checkpoint file.
 
-    new_results = pd.DataFrame(data)
+    Each record is stored as a separate JSON line for incremental
+    saving and crash recovery.
 
-    if os.path.exists(file_path):
-        old_data = pd.read_json(file_path, orient="records")
-        combined_results = pd.concat([old_data, new_results], ignore_index=True)
-    else:
-        combined_results = new_results
+    Args:
+        data (dict): Single record to save.
+        file_path (str): Path to JSONL file.
+    """
+    
+    with open(file_path, 'a') as f:
+        f.write(json.dumps(data) + '\n')
 
-    combined_results.to_json(file_path, orient="records", indent=2)
+def generate_rag_responses(df, vectorstore_db, session_id):
+    """
+    Runs the RAG pipeline over a dataset and stores outputs as JSONL.
 
-def build_data(df, vectorstore_db, session_id):
-    data = []
+    Iterates over input questions, generates responses using the RAG system,
+    and saves each result incrementally for checkpointing and recovery.
+
+    Args:
+        df (DataFrame): Input dataset containing questions and references.
+        vectorstore_db: Vector database for retrieval.
+        session_id: Session identifier for RAG tracking.
+
+    Returns:
+        None
+    """
+
     for i, (_, row) in enumerate(df.iterrows(), start=1):
         try:
             response = get_rag_response(row.user_input, vectorstore_db, session_id)
 
-            data.append({
+            result = {
                 "user_input": row.user_input,
                 "retrieved_contexts": response["contexts"],
                 "response": response["answer"],
                 "reference": row.reference
-            })
+            }
 
-            save_checkpoints(data, "test_data/rag_results.json")
+            save_checkpoints(result, "test_data/rag_results.jsonl")
             print(f"Row {i} processed and saved.")
 
         except Exception as e:
@@ -82,6 +139,4 @@ def build_data(df, vectorstore_db, session_id):
             print("Try after ", re.search(r'(\d+m+\d.)', str(e)).group(0))
             print(f"Error processing row {i}: {e}")
             break
-    
-    return data
-    
+
