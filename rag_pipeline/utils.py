@@ -22,20 +22,21 @@ def get_file_extension(file_name):
 
     return ext
 
-def clean_file(file):
+import re
+
+def clean_file(text):
     """
-    Cleans raw extracted text by normalizing excessive whitespace.
-
-    Replaces multiple newline and whitespace patterns with
-    standardized line breaks for consistent downstream processing.
-
-    Args:
-        file (str): Raw extracted text.
-
-    Returns:
-        str: Cleaned text.
+    Cleans raw extracted text for RAG pipelines.
+    - Removes excessive whitespace
+    - Preserves paragraph structure
     """
-    return re.sub('\n\s+\n+','\n\n',file)
+
+    text = text.replace('\r\n', '\n').replace('\r', '\n') # normalize Windows/Mac line endings 
+    text = re.sub(r'[ \t]+', ' ', text) # remove excessive spaces/tabs
+    text = re.sub(r' *\n *', '\n', text)  # clean spaces around newlines
+    text = re.sub(r'\n{3,}', '\n\n', text) # collapse multiple blank lines into two
+
+    return text.strip()
 
 def parse(file):
     """
@@ -63,4 +64,4 @@ def parse(file):
         with open(file,'r', encoding='utf-8') as r:
             data = r.read()
         print(f"Successfully parsed {os.path.basename(file)}")
-        return data
+        return clean_file(data)
