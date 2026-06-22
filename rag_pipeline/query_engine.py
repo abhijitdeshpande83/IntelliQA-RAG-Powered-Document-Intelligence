@@ -13,9 +13,35 @@ warnings.filterwarnings("ignore")
 llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0, groq_api_key=os.getenv("GROQ_API_KEY"))
 
 def is_supported_file(file):
+    """
+    Checks whether a file type is supported for ingestion.
+
+    Args:
+        file (str): File path.
+
+    Returns:
+        bool: True if file extension is supported, else False.
+    """
+
     return get_file_extension(file) in supported_file_types()
 
 def load_data(file_path, session_id, file_name):
+    """
+    Loads a file, extracts text, and splits it into chunks for indexing.
+
+    Steps:
+        1. Parses raw file content
+        2. Wraps content into a LangChain Document with metadata
+        3. Splits document into overlapping chunks for retrieval
+
+    Args:
+        file_path (str): Path to input file.
+        session_id (str): Session identifier for filtering in vector DB.
+        file_name (str): Original file name for metadata.
+
+    Returns:
+        list[Document]: Chunked documents ready for embedding/storage.
+    """
 
     text = parse(file_path)
 
@@ -35,18 +61,54 @@ def load_data(file_path, session_id, file_name):
     chunks = text_splitter.split_documents([doc])
     return chunks
 
-def vectorstore(persist_directory="chroma_db",documents=None):
+def vectorstore(persist_directory="chroma_db", documents=None):
+    """
+    Creates or loads a vector store for retrieval.
+
+    If documents are provided, a new vector database is created.
+    Otherwise, an existing persisted vector store is loaded.
+
+    Args:
+        persist_directory (str): Path to vector DB storage.
+        documents (list, optional): Documents to index.
+
+    Returns:
+        VectorStore: Initialized or loaded vector database.
+    """
+
     if documents:
         return create_vector_db(persist_directory=persist_directory, documents=documents)
     else:
         return load_vector_db(persist_directory=persist_directory)
 
 
-def ask_question(Question, vectorstore, session_id, eval=False):
+def ask_question(Question, vectorstore, session_id, eval=False, k=4, search_type="similarity"):
+    """
+    Runs a Retrieval-Augmented Generation (RAG) pipeline for a query.
+
+    Retrieves relevant documents filtered by session_id and generates
+    a response using an LLM. Optionally returns the complete retrieval
+    output for evaluation purposes.
+
+    Args:
+        question (str): Input query.
+        vectorstore: Vector database for retrieval.
+        session_id (str): Session filter for retrieval.
+        eval (bool, optional): Return full pipeline output instead of only the answer. Defaults to False.
+        k (int, optional): Number of documents to retrieve. Defaults to 4.
+        search_type (str, optional): Retrieval strategy (e.g., "similarity", "mmr"). Defaults to "similarity".
+
+    Returns:
+        str | dict:
+            - If eval=False, returns the generated answer.
+            - If eval=True, returns the complete RetrievalQA response.
+    """
 
     retriever = vectorstore.as_retriever(
+                    search_type= search_type,
                     search_kwargs={
-                        "filter": {"session_id": session_id}
+                        "filter": {"session_id": session_id},
+                        "k": k
                         }
                     )
 

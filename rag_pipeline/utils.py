@@ -9,6 +9,7 @@ tika.TikaServerEndpoint = "http://tika:9998"
 from tika import parser
 
 def supported_file_types():
+       
     return {
             '.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx', 
             '.txt', '.md', '.py', '.ipynb', '.json', '.yaml', '.yml', 
@@ -16,13 +17,43 @@ def supported_file_types():
             }
     
 def get_file_extension(file_name):
+
     _, ext = os.path.splitext(file_name)
+
     return ext
 
-def clean_file(file):
-    return re.sub('\n\s+\n+','\n\n',file)
+import re
+
+def clean_file(text):
+    """
+    Cleans raw extracted text for RAG pipelines.
+    - Removes excessive whitespace
+    - Preserves paragraph structure
+    """
+
+    text = text.replace('\r\n', '\n').replace('\r', '\n')   # normalize Windows/Mac line endings 
+    text = text.replace('\xa0', ' ')                        # non-breaking spaces -> normal space
+    text = re.sub(r'(\w)-\n(\w)', r'\1\2', text)            # rejoin words split across lines: vesi-\ncles -> vesicles
+    text = re.sub(r'[ \t]+', ' ', text)
+    text = re.sub(r'[ \t]+', ' ', text)                     # remove excessive spaces/tabs
+    text = re.sub(r' *\n *', '\n', text)                    # clean spaces around newlines
+    text = re.sub(r'\n{3,}', '\n\n', text)                  # collapse multiple blank lines into two
+
+    return text.strip()
 
 def parse(file):
+    """
+    Parses a file and extracts its textual content.
+
+    Uses Apache Tika for complex document formats (PDF, DOCX, PPT, etc.)
+    and direct file reading for plain text and structured text formats.
+
+    Args:
+        file (str): Path to the input file.
+
+    Returns:
+        str: Extracted and cleaned text content.
+    """
 
     tika_files = {'.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx', '.html', '.xml'}
     text_files = {'.txt', '.md', '.py', '.ipynb', '.json', '.yaml', '.yml', '.toml', '.csv', }
@@ -36,4 +67,4 @@ def parse(file):
         with open(file,'r', encoding='utf-8') as r:
             data = r.read()
         print(f"Successfully parsed {os.path.basename(file)}")
-        return data
+        return clean_file(data)
