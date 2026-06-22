@@ -8,3 +8,4 @@ cu.sh
 /venv
 /chroma_db
 __pycache__
+chroma*
