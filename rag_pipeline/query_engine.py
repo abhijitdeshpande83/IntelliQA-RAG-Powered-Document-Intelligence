@@ -82,7 +82,7 @@ def vectorstore(persist_directory="chroma_db", documents=None):
         return load_vector_db(persist_directory=persist_directory)
 
 
-def ask_question(Question, vectorstore, session_id, eval=False, k=4, search_type="similarity"):
+def ask_question(Question, vectorstore, session_id, return_metadata=False, k=4, search_type="similarity"):
     """
     Runs a Retrieval-Augmented Generation (RAG) pipeline for a query.
 
@@ -94,14 +94,14 @@ def ask_question(Question, vectorstore, session_id, eval=False, k=4, search_type
         question (str): Input query.
         vectorstore: Vector database for retrieval.
         session_id (str): Session filter for retrieval.
-        eval (bool, optional): Return full pipeline output instead of only the answer. Defaults to False.
+        return_metadata (bool, optional): Return full pipeline output instead of only the answer. Defaults to False.
         k (int, optional): Number of documents to retrieve. Defaults to 4.
         search_type (str, optional): Retrieval strategy (e.g., "similarity", "mmr"). Defaults to "similarity".
 
     Returns:
         str | dict:
-            - If eval=False, returns the generated answer.
-            - If eval=True, returns the complete RetrievalQA response.
+            - If return_metadata=False, returns the generated answer.
+            - If return_metadata=True, returns the complete RetrievalQA response.
     """
 
     retriever = vectorstore.as_retriever(
@@ -118,5 +118,5 @@ def ask_question(Question, vectorstore, session_id, eval=False, k=4, search_type
                 return_source_documents=True
                 )
     response = pipeline.invoke(Question)
-    return response['result'] if not eval else response
+    return response['result'] if not return_metadata else response
 

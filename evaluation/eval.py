@@ -84,7 +84,8 @@ def get_rag_response(question: str, vectorstore_db, session_id: str, k:int, sear
         dict: Contains generated answer and retrieved contexts.
     """
 
-    response = ask_question(question, vectorstore_db, session_id, eval=True, k=k, search_type=search_type)
+    response = ask_question(question, vectorstore_db, session_id, return_metadata=True,
+                             k=k, search_type=search_type)
     
     answer = response['result']
     contexts = [doc.page_content for doc in response['source_documents']]
