@@ -7,6 +7,7 @@ from langchain_groq import ChatGroq
 from langchain_classic.chains import RetrievalQA
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
+from langchain_core.prompts import PromptTemplate
 from rag_pipeline.vector_store import create_vector_db, load_vector_db
 warnings.filterwarnings("ignore")
 
@@ -111,12 +112,30 @@ def ask_question(Question, vectorstore, session_id, return_metadata=False, k=4, 
                         "k": k
                         }
                     )
+    prompt_template = """You are a helpful assistant answering questions based on the provided context.
+
+    Use the information in the context below to answer the question. The context may contain the answer directly or in pieces you need to connect. Read it carefully and use any relevant information you find, even if it is partial or phrased differently from the question.
+
+    Only respond that you cannot answer if the context contains nothing relevant to the question. Do not refuse simply because the answer is not stated word-for-word.
+
+    Context:
+    {context}
+
+    Question: {question}
+
+    Answer:"""
+
+    PROMPT = PromptTemplate(
+        template=prompt_template,
+        input_variables=["context", "question"]
+        )
 
     pipeline = RetrievalQA.from_chain_type(
                 llm=llm,
                 retriever=retriever,
-                return_source_documents=True
+                return_source_documents=True,
+                chain_type_kwargs={"prompt": PROMPT}
                 )
     response = pipeline.invoke(Question)
-    return response['result'] if not return_metadata else response
+    return response if return_metadata else response['result']
 
