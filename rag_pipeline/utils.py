@@ -30,11 +30,17 @@ def clean_file(text):
     - Removes excessive whitespace
     - Preserves paragraph structure
     """
-
+    
     text = text.replace('\r\n', '\n').replace('\r', '\n')   # normalize Windows/Mac line endings 
     text = text.replace('\xa0', ' ')                        # non-breaking spaces -> normal space
-    text = re.sub(r'(\w)-\n(\w)', r'\1\2', text)            # rejoin words split across lines: vesi-\ncles -> vesicles
-    text = re.sub(r'[ \t]+', ' ', text)
+    text = re.sub(r'(\w)-\n(\w)', r'\1\2', text)            # rejoin words split across lines
+
+    # 1. REMOVE DOT LEADERS & REPETITIVE PUNCTUATIONS (Fixes TOC noise like ". . . . . . . 14")
+    text = re.sub(r'\.{2,}', '', text)                      # Remove blocks of continuous dots
+    text = re.sub(r'(\.\s){2,}', '', text)                  # Remove spaced dots like ". . . ."
+    text = re.sub(r'_{2,}', '', text)                       # Remove continuous underscores
+
+    # 2. STRIP CLEAN EXTRA WHITESPACE
     text = re.sub(r'[ \t]+', ' ', text)                     # remove excessive spaces/tabs
     text = re.sub(r' *\n *', '\n', text)                    # clean spaces around newlines
     text = re.sub(r'\n{3,}', '\n\n', text)                  # collapse multiple blank lines into two

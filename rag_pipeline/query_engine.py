@@ -7,7 +7,8 @@ from langchain_groq import ChatGroq
 from langchain_classic.chains import RetrievalQA
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
-from rag_pipeline.vector_store import create_vector_db, load_vector_db
+from langchain_core.prompts import PromptTemplate
+from rag_pipeline.vector_store import get_vector_store
 warnings.filterwarnings("ignore")
 
 llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0, groq_api_key=os.getenv("GROQ_API_KEY"))
@@ -61,28 +62,24 @@ def load_data(file_path, session_id, file_name):
     chunks = text_splitter.split_documents([doc])
     return chunks
 
-def vectorstore(persist_directory="chroma_db", documents=None):
+def vectorstore(documents=None, batch_size=1000):
     """
     Creates or loads a vector store for retrieval.
 
-    If documents are provided, a new vector database is created.
-    Otherwise, an existing persisted vector store is loaded.
-
     Args:
-        persist_directory (str): Path to vector DB storage.
         documents (list, optional): Documents to index.
-
+        batch_size (int, optional): Number of documents to process in each batch. Defaults to 1000. 
     Returns:
         VectorStore: Initialized or loaded vector database.
     """
 
     if documents:
-        return create_vector_db(persist_directory=persist_directory, documents=documents)
+        return get_vector_store(documents=documents, batch_size=batch_size)
     else:
-        return load_vector_db(persist_directory=persist_directory)
+        return get_vector_store()
 
 
-def ask_question(Question, vectorstore, session_id, eval=False, k=4, search_type="similarity"):
+def ask_question(Question, vectorstore, session_id, return_metadata=False, k=4, search_type="similarity"):
     """
     Runs a Retrieval-Augmented Generation (RAG) pipeline for a query.
 
@@ -94,14 +91,14 @@ def ask_question(Question, vectorstore, session_id, eval=False, k=4, search_type
         question (str): Input query.
         vectorstore: Vector database for retrieval.
         session_id (str): Session filter for retrieval.
-        eval (bool, optional): Return full pipeline output instead of only the answer. Defaults to False.
+        return_metadata (bool, optional): Return full pipeline output instead of only the answer. Defaults to False.
         k (int, optional): Number of documents to retrieve. Defaults to 4.
         search_type (str, optional): Retrieval strategy (e.g., "similarity", "mmr"). Defaults to "similarity".
 
     Returns:
         str | dict:
-            - If eval=False, returns the generated answer.
-            - If eval=True, returns the complete RetrievalQA response.
+            - If return_metadata=False, returns the generated answer.
+            - If return_metadata=True, returns the complete RetrievalQA response.
     """
 
     retriever = vectorstore.as_retriever(
@@ -111,12 +108,30 @@ def ask_question(Question, vectorstore, session_id, eval=False, k=4, search_type
                         "k": k
                         }
                     )
+    prompt_template = """You are a helpful assistant answering questions based on the provided context.
+
+    Use the information in the context below to answer the question. The context may contain the answer directly or in pieces you need to connect. Read it carefully and use any relevant information you find, even if it is partial or phrased differently from the question.
+
+    Only respond that you cannot answer if the context contains nothing relevant to the question. Do not refuse simply because the answer is not stated word-for-word.
+
+    Context:
+    {context}
+
+    Question: {question}
+
+    Answer:"""
+
+    PROMPT = PromptTemplate(
+        template=prompt_template,
+        input_variables=["context", "question"]
+        )
 
     pipeline = RetrievalQA.from_chain_type(
                 llm=llm,
                 retriever=retriever,
-                return_source_documents=True
+                return_source_documents=True,
+                chain_type_kwargs={"prompt": PROMPT}
                 )
     response = pipeline.invoke(Question)
-    return response['result'] if not eval else response
+    return response if return_metadata else response['result']
 

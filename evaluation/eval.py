@@ -1,12 +1,13 @@
 import os
 from os import path
+import pandas as pd
 import re
 import json
 from datetime import datetime
 import subprocess
 from pathlib import Path
 from dotenv import load_dotenv
-from ragas import RunConfig
+from ragas import EvaluationDataset, RunConfig, evaluate
 from ragas.testset import TestsetGenerator   
 load_dotenv()
 from rag_pipeline.query_engine import load_data, ask_question, is_supported_file
@@ -84,7 +85,8 @@ def get_rag_response(question: str, vectorstore_db, session_id: str, k:int, sear
         dict: Contains generated answer and retrieved contexts.
     """
 
-    response = ask_question(question, vectorstore_db, session_id, eval=True, k=k, search_type=search_type)
+    response = ask_question(question, vectorstore_db, session_id, return_metadata=True,
+                             k=k, search_type=search_type)
     
     answer = response['result']
     contexts = [doc.page_content for doc in response['source_documents']]
@@ -132,7 +134,7 @@ def generate_rag_responses(df, vectorstore_db, session_id, k=4, search_type="sim
                 vectorstore_db,
                 session_id,
                 k=k,
-                search_type=search_type
+                search_type=search_type,
             )
 
             result = {
@@ -151,3 +153,25 @@ def generate_rag_responses(df, vectorstore_db, session_id, k=4, search_type="sim
             print(f"Error processing row {i}: {e}")
             break
 
+def run_batch_evaluation(rag_results, metrics, run_config, file_path):
+
+    done = set()
+    if os.path.exists(file_path):
+        done = set(pd.read_json(file_path, lines=True)['user_input'])
+
+    for i, data in enumerate(rag_results, start=1):
+        if data['user_input'] in done:
+            continue
+        print(f"Processing: {i}")
+        result = evaluate(dataset=EvaluationDataset.from_list([data]), metrics=metrics, 
+                       run_config=run_config, raise_exceptions=True)
+        
+        score = result.to_pandas().to_dict(orient='records')[0]
+
+        with open(file_path, 'a') as f:
+            f.write(json.dumps(score) + '\n')
+
+def get_score(file_path):
+    scores = pd.read_csv(file_path)
+    return scores[["llm_context_precision_with_reference","context_recall",
+              "faithfulness","answer_relevancy"]].mean()
