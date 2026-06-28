@@ -8,7 +8,7 @@ from langchain_classic.chains import RetrievalQA
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 from langchain_core.prompts import PromptTemplate
-from rag_pipeline.vector_store import create_vector_db, load_vector_db
+from rag_pipeline.vector_store import get_vector_store
 warnings.filterwarnings("ignore")
 
 llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0, groq_api_key=os.getenv("GROQ_API_KEY"))
@@ -62,25 +62,21 @@ def load_data(file_path, session_id, file_name):
     chunks = text_splitter.split_documents([doc])
     return chunks
 
-def vectorstore(persist_directory="chroma_db", documents=None):
+def vectorstore(documents=None, batch_size=1000):
     """
     Creates or loads a vector store for retrieval.
 
-    If documents are provided, a new vector database is created.
-    Otherwise, an existing persisted vector store is loaded.
-
     Args:
-        persist_directory (str): Path to vector DB storage.
         documents (list, optional): Documents to index.
-
+        batch_size (int, optional): Number of documents to process in each batch. Defaults to 1000. 
     Returns:
         VectorStore: Initialized or loaded vector database.
     """
 
     if documents:
-        return create_vector_db(persist_directory=persist_directory, documents=documents)
+        return get_vector_store(documents=documents, batch_size=batch_size)
     else:
-        return load_vector_db(persist_directory=persist_directory)
+        return get_vector_store()
 
 
 def ask_question(Question, vectorstore, session_id, return_metadata=False, k=4, search_type="similarity"):
