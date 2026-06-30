@@ -3,8 +3,8 @@ from os import path
 import pandas as pd
 import re
 import json
+import time
 from datetime import datetime
-import subprocess
 from pathlib import Path
 from dotenv import load_dotenv
 from ragas import EvaluationDataset, RunConfig, evaluate
@@ -108,7 +108,8 @@ def save_checkpoints(data, file_path):
     with open(file_path, 'a') as f:
         f.write(json.dumps(data) + '\n')
 
-def generate_rag_responses(df, vectorstore_db, session_id, k=4, search_type="similarity"):
+def generate_rag_responses(df, vectorstore_db, session_id, k=4, search_type="similarity",
+                                            checkpoint_file="test_data/rag_results.jsonl"):
     """
     Runs the RAG pipeline over a dataset and stores outputs as JSONL.
 
@@ -122,13 +123,20 @@ def generate_rag_responses(df, vectorstore_db, session_id, k=4, search_type="sim
         k (int, optional): Number of documents to retrieve. Defaults to 4.
         search_type (str, optional): Retrieval strategy (e.g., "similarity", "mmr").
             Defaults to "similarity".
+        checkpoint_file (str): Path to the checkpoint file for incremental saving.
 
     Returns:
         None
     """
+    processed_inputs=set()
+
+    if os.path.exists(checkpoint_file):
+        processed_inputs = set(pd.read_json(checkpoint_file, lines=True)['user_input'])
 
     for i, (_, row) in enumerate(df.iterrows(), start=1):
         try:
+            if row.user_input in processed_inputs:
+                continue
             response = get_rag_response(
                 row.user_input,
                 vectorstore_db,
@@ -144,7 +152,8 @@ def generate_rag_responses(df, vectorstore_db, session_id, k=4, search_type="sim
                 "reference": row.reference
             }
 
-            save_checkpoints(result, "test_data/rag_results.jsonl")
+            save_checkpoints(result, checkpoint_file)
+            processed_inputs.add(row.user_input)
             print(f"Row {i} processed and saved.")
 
         except Exception as e:
@@ -155,12 +164,12 @@ def generate_rag_responses(df, vectorstore_db, session_id, k=4, search_type="sim
 
 def run_batch_evaluation(rag_results, metrics, run_config, file_path):
 
-    done = set()
+    evaluated_inputs = set()
     if os.path.exists(file_path):
-        done = set(pd.read_json(file_path, lines=True)['user_input'])
+        evaluated_inputs = set(pd.read_json(file_path, lines=True)['user_input'])
 
     for i, data in enumerate(rag_results, start=1):
-        if data['user_input'] in done:
+        if data['user_input'] in evaluated_inputs:
             continue
         print(f"Processing: {i}")
         result = evaluate(dataset=EvaluationDataset.from_list([data]), metrics=metrics, 
@@ -170,6 +179,10 @@ def run_batch_evaluation(rag_results, metrics, run_config, file_path):
 
         with open(file_path, 'a') as f:
             f.write(json.dumps(score) + '\n')
+
+        evaluated_inputs.add(data['user_input'])
+        
+        time.sleep(4)
 
 def get_score(file_path):
     scores = pd.read_csv(file_path)

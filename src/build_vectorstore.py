@@ -7,7 +7,7 @@ import pandas as pd
 from dotenv import load_dotenv
 load_dotenv()
 
-from evaluation.eval import prepare_testset_documents
+from eval import prepare_testset_documents
 
 from rag_pipeline.query_engine import vectorstore
 

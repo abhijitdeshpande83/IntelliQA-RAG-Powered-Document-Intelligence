@@ -1,4 +1,4 @@
-from evaluation.eval import run_batch_evaluation, get_score, save_file, get_results
+from eval import run_batch_evaluation, get_score, save_file, get_results
 import time
 import json
 from ragas import RunConfig
@@ -43,10 +43,14 @@ def main():
         rag_results = [json.loads(line) for line in f]
 
     file_path = "evaluation/rag_eval_v8.jsonl"
+    try:
+        run_batch_evaluation(rag_results, metrics, run_config, file_path)
 
-    run_batch_evaluation(rag_results, metrics, run_config, file_path)
+    except Exception as e:
+        print(type(e))
+        print(e)
+        raise
 
 if __name__=="__main__":
     print("Starting evaluation...")
-    time.sleep(9000)
     main()
