@@ -175,3 +175,21 @@ def get_score(file_path):
     scores = pd.read_csv(file_path)
     return scores[["llm_context_precision_with_reference","context_recall",
               "faithfulness","answer_relevancy"]].mean()
+
+def save_file(file, file_path):
+
+    try:
+        if os.path.exists(file_path):
+            return "File already exists please provide another path"
+        
+        file.to_csv(file_path, index=False)
+        print("File saved to successfully")
+
+    except Exception as e:
+        print(f"Error saving file: {e}")
+
+def get_results(file_path):
+    try:
+        return pd.read_json(file_path, lines=True)
+    except Exception as e:
+        return f"Error reading results: {e}"

@@ -30,7 +30,7 @@ def clean_file(text):
     - Removes excessive whitespace
     - Preserves paragraph structure
     """
-    
+
     text = text.replace('\r\n', '\n').replace('\r', '\n')   # normalize Windows/Mac line endings 
     text = text.replace('\xa0', ' ')                        # non-breaking spaces -> normal space
     text = re.sub(r'(\w)-\n(\w)', r'\1\2', text)            # rejoin words split across lines
@@ -66,11 +66,11 @@ def parse(file):
 
     if get_file_extension(file) in tika_files:
         context = parser.from_file(file)
-        print(f"Successfully parsed {os.path.basename(file)}")
+        # print(f"Successfully parsed {os.path.basename(file)}")
         return clean_file(context['content'].strip())
 
     if get_file_extension(file) in text_files:
         with open(file,'r', encoding='utf-8') as r:
             data = r.read()
-        print(f"Successfully parsed {os.path.basename(file)}")
+        # print(f"Successfully parsed {os.path.basename(file)}")
         return clean_file(data)
