@@ -26,7 +26,7 @@ def is_supported_file(file):
 
     return get_file_extension(file) in supported_file_types()
 
-def load_data(file_path, session_id, file_name):
+def load_data(file_path, session_id, file_name, chunk_size=1000, chunk_overlap=50):
     """
     Loads a file, extracts text, and splits it into chunks for indexing.
 
@@ -39,6 +39,8 @@ def load_data(file_path, session_id, file_name):
         file_path (str): Path to input file.
         session_id (str): Session identifier for filtering in vector DB.
         file_name (str): Original file name for metadata.
+        chunk_size (int, optional): Size of each text chunk. Defaults to 1000.
+        chunk_overlap (int, optional): Overlap between consecutive chunks. Defaults to 50.
 
     Returns:
         list[Document]: Chunked documents ready for embedding/storage.
@@ -55,8 +57,8 @@ def load_data(file_path, session_id, file_name):
             )
     
     text_splitter = RecursiveCharacterTextSplitter(
-                    chunk_size=1000, 
-                    chunk_overlap=50
+                    chunk_size=chunk_size, 
+                    chunk_overlap=chunk_overlap
                     )
     
     chunks = text_splitter.split_documents([doc])
