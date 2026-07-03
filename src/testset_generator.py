@@ -4,9 +4,10 @@ from ragas.llms import LangchainLLMWrapper
 from ragas.embeddings import LangchainEmbeddingsWrapper
 from langchain_ollama import ChatOllama                     # ollama can run locally
 from langchain_huggingface import HuggingFaceEmbeddings
-from src.eval import prepare_testset_documents, generate_qa_dataset, save_checkpoints
+from src.eval import prepare_testset_documents, generate_qa_dataset, save_checkpoints, load_processed_inputs
 from collections import defaultdict
 import random
+import pandas as pd
 
 generator_llm = LangchainLLMWrapper(
                 ChatOllama(
@@ -31,7 +32,7 @@ run_config = RunConfig(max_workers=2, timeout=180)
 def create_doc_set():
 
     print("Preparing testset documents...")
-    docs = prepare_testset_documents("eval_data", chunk_size=1000, chunk_overlap=150)
+    docs = prepare_testset_documents("evaluation/eval_data", chunk_size=1000, chunk_overlap=150)
 
     group_docs = defaultdict(list)
     
@@ -62,7 +63,14 @@ def define_testset_size(chunks):
         return 1
 
 def create_test_set(docs, file_path):
+
+    processed_files = set(pd.read_json(file_path, lines=True)['filename'])
+
     for file, chunks in docs.items():
+        if file in processed_files:
+            print(f"Testset for {file} already exists. Skipping...\n")
+            continue
+        print(len(processed_files), "of", len(docs), "files processed.\n")
         testset_size = define_testset_size(chunks)
         testset = generate_qa_dataset(
                                 chunks, generator_llm, generator_embeddings,  
@@ -72,9 +80,9 @@ def create_test_set(docs, file_path):
         df = testset.to_pandas()
         df["filename"] = file
         save_checkpoints(df, file_path)
-        print(f"Saved testset for {file}")
+        print(f"Saved testset for {file}\n")
 
 if __name__ == "__main__":
     print("Generating test set...")
     docs = create_doc_set()
-    create_test_set(docs, "test_data/new_testset.jsonl")
+    create_test_set(docs, "evaluation/testset/new_testset.jsonl")

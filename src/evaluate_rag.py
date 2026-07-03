@@ -7,11 +7,11 @@ from ragas.embeddings import LangchainEmbeddingsWrapper
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_google_genai import ChatGoogleGenerativeAI
 from ragas.metrics import (
-    LLMContextPrecisionWithReference,
-    LLMContextRecall,
-    Faithfulness,
-    ResponseRelevancy,
-)
+                            LLMContextPrecisionWithReference,
+                            LLMContextRecall,
+                            Faithfulness,
+                            ResponseRelevancy,
+                        )
 
 evaluator_llm = LangchainLLMWrapper(
                     ChatGoogleGenerativeAI(
@@ -38,13 +38,12 @@ metrics = [
 run_config = RunConfig(max_workers=1, timeout=600)
 
 
-def main():
-    with open("test_data/rag_results.jsonl", "r") as f:
-        rag_results = [json.loads(line) for line in f]
+def main(rag_results, file_path):
+    with open(rag_results, "r") as f:
+        rag_result_list = [json.loads(line) for line in f]
 
-    file_path = "evaluation/rag_eval_v8.jsonl"
     try:
-        run_batch_evaluation(rag_results, metrics, run_config, file_path)
+        run_batch_evaluation(rag_result_list, metrics, run_config, file_path)
 
     except Exception as e:
         print(type(e))
@@ -54,4 +53,6 @@ def main():
 if __name__=="__main__":
     print("Starting evaluation...")
     # time.sleep(9000)
-    main()
+    main(rag_results="evaluation/rag_results/rag_results_baseline.jsonl", 
+            file_path="evaluation/eval_results/rag_eval_baseline.jsonl")
+    print("Evaluation completed.")

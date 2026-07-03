@@ -11,7 +11,7 @@ from langchain_core.prompts import PromptTemplate
 from rag_pipeline.vector_store import get_vector_store
 warnings.filterwarnings("ignore")
 
-llm = ChatGroq(model="llama-3.3-70b-versatile", temperature=0, groq_api_key=os.getenv("GROQ_API_KEY"))
+llm = ChatGroq(model="openai/gpt-oss-120b", temperature=0, groq_api_key=os.getenv("GROQ_API_KEY"))
 
 def is_supported_file(file):
     """
@@ -81,7 +81,7 @@ def vectorstore(documents=None, batch_size=1000):
         return get_vector_store()
 
 
-def ask_question(Question, vectorstore, session_id, return_metadata=False, k=4, search_type="similarity"):
+def ask_question(question, vectorstore, session_id, return_metadata=False, k=4, search_type="similarity"):
     """
     Runs a Retrieval-Augmented Generation (RAG) pipeline for a query.
 
@@ -134,6 +134,6 @@ def ask_question(Question, vectorstore, session_id, return_metadata=False, k=4, 
                 return_source_documents=True,
                 chain_type_kwargs={"prompt": PROMPT}
                 )
-    response = pipeline.invoke(Question)
+    response = pipeline.invoke(question)
     return response if return_metadata else response['result']
 

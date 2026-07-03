@@ -7,7 +7,7 @@ import pandas as pd
 from dotenv import load_dotenv
 load_dotenv()
 
-from eval import prepare_testset_documents
+from src.eval import prepare_testset_documents
 
 from rag_pipeline.query_engine import vectorstore
 
@@ -33,7 +33,7 @@ def create_csv_vectorstore(docs):
 
 
 def main():
-    docs = prepare_testset_documents("eval_data")
+    docs = prepare_testset_documents("evaluation/eval_data")
     print(f"Successfully prepared {len(docs)} documents.")
 
     create_document_vectorstore(docs)

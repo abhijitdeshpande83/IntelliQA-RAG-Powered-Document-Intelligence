@@ -8,12 +8,15 @@ from eval import (prepare_testset_documents,
                   )
 from rag_pipeline.query_engine import vectorstore
 
-df = pd.read_json("test_data/curated_rag_evaluation_testset_32.jsonl", orient="records", lines=True)
+df = pd.read_json("evaluation/testset/new_testset_rewritten.jsonl", orient="records", lines=True)
+
+test_set = df.sample(n=50, random_state=0)
 
 vectorstore_db = vectorstore()
 
 def main():
-    generate_rag_responses(df, vectorstore_db, session_id="test_session", k=20)
+    generate_rag_responses(test_set, vectorstore_db, session_id="test_session",
+                           checkpoint_file="evaluation/rag_results/rag_results_baseline.jsonl")
     
 
 if __name__=="__main__":

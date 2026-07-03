@@ -136,7 +136,7 @@ def load_processed_inputs(file_path):
         return processed_inputs
 
 def generate_rag_responses(df, vectorstore_db, session_id, k=4, search_type="similarity",
-                           checkpoint_file="test_data/rag_results.jsonl"):
+                           checkpoint_file="evaluation/rag_results/rag_results.jsonl"):
     """
     Runs a RAG pipeline over an input dataset and stores outputs incrementally as JSONL.
 
