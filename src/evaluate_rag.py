@@ -53,6 +53,6 @@ def main(rag_results, file_path):
 if __name__=="__main__":
     print("Starting evaluation...")
     # time.sleep(9000)
-    main(rag_results="evaluation/rag_results/rag_results_baseline.jsonl", 
-            file_path="evaluation/eval_results/rag_eval_baseline.jsonl")
+    main(rag_results="evaluation/rag_results/rag_results_v3.jsonl", 
+            file_path="evaluation/eval_results/rag_eval_v3.jsonl")
     print("Evaluation completed.")

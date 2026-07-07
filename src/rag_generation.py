@@ -16,8 +16,9 @@ vectorstore_db = vectorstore()
 
 def main():
     generate_rag_responses(test_set, vectorstore_db, session_id="test_session",
-                           checkpoint_file="evaluation/rag_results/rag_results_baseline.jsonl")
-    
+                           checkpoint_file="evaluation/rag_results/rag_results_v4.jsonl",
+                           k=20)
+
 
 if __name__=="__main__":
     main()

@@ -10,6 +10,7 @@
   <img src="https://img.shields.io/badge/v3.2-22C55E?style=for-the-badge&labelColor=111827" alt="Version 3.2" />
 </p>
 
+
 ## System Overview
 
 IntelliQA is a **production-oriented Retrieval Augmented Generation (RAG) backend** for grounded question answering over private documents. Core logic ships as a Python wheel so the same package can power a notebook demo today and an API service tomorrow without rewrites.
@@ -19,7 +20,8 @@ IntelliQA is a **production-oriented Retrieval Augmented Generation (RAG) backen
 ## Problem Statement
 
 <p align="center">
-  <img src="./docs/problem-statement.svg" alt="Why Standard RAG Fails in Production: three pillars covering hallucination, prototype fragility, and vendor lock-in" width="100%"/>
+  <img src="./docs/RAG-Comparison.png" alt="Why Standard RAG Fails in Production: three pillars covering hallucination, prototype fragility, and vendor lock-in" 
+  style="max-width: 900px; width: 100%; height: auto; border-radius: 16px;" />
 </p>
 
 ## TL;DR
@@ -30,41 +32,26 @@ IntelliQA is a packaged RAG backend that directly addresses each of the failure 
 
 <div align="center">
 
-| | |
-|:---|:---|
-| **LLM & Inference** | ![Llama 3.3 70B][llama] ![Groq LPU][groq] |
-| **Embeddings** | ![Hugging Face][hf] ![all-MiniLM-L6-v2][minilm] |
-| **RAG Framework** | ![LangChain][langchain] ![ChromaDB][chroma] |
-| **Document Parsing** | ![Apache Tika][tika] |
-| **Evaluation** | ![Ragas][ragas] ![Ollama][ollama] ![Qwen2.5][qwen] ![Gemini][gemini] |
-| **Deployment** | ![Docker][docker] ![AWS EC2][ec2] |
-| **Packaging** | ![setup.py + wheel][wheel] |
-| **Language** | ![Python][python] ![Jupyter][jupyter] |
+| Category | Technology |
+| :--- | :--- |
+| **LLM & Inference** | ![OpenAI GPT-OSS 120B](https://img.shields.io/badge/OpenAI_GPT--OSS_120B-412991?style=flat&logo=openai&logoColor=white) ![Groq LPU](https://img.shields.io/badge/Groq_LPU-F55036?style=flat&logo=cpu&logoColor=white) |
+| **Embeddings** | ![Hugging Face](https://img.shields.io/badge/Hugging_Face-FFD21E?style=flat&logo=huggingface&logoColor=black) ![BAAI/bge-large-en-v1.5](https://img.shields.io/badge/BAAI_bge--large--en--v1.5-0052CC?style=flat&logo=target&logoColor=white) |
+| **RAG Framework** | ![LangChain](https://img.shields.io/badge/LangChain-1C3C3A?style=flat&logo=langchain&logoColor=white) ![PGVector](https://img.shields.io/badge/PGVector-4169E1?style=flat&logo=postgresql&logoColor=white) |
+| **Document Parsing**| ![Apache Tika](https://img.shields.io/badge/Apache_Tika-E65100?style=flat&logo=apache&logoColor=white) |
+| **Evaluation** | ![Ragas](https://img.shields.io/badge/Ragas-FF6F00?style=flat&logo=googleanalytics&logoColor=white) ![Ollama](https://img.shields.io/badge/Ollama-000000?style=flat&logo=ollama&logoColor=white) ![Qwen2.5](https://img.shields.io/badge/Qwen_2.5-551A8B?style=flat&logo=qwen&logoColor=white) ![Gemini](https://img.shields.io/badge/Google_Gemini-8E75FF?style=flat&logo=googlegemini&logoColor=white) |
+| **Deployment** | ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white) ![AWS EC2](https://img.shields.io/badge/AWS_EC2-FF9900?style=flat&logo=amazonec2&logoColor=white) |
+| **Packaging** | ![setup.py + wheel](https://img.shields.io/badge/setup.py_%2B_wheel-3776AB?style=flat&logo=python&logoColor=white) |
+| **Language** | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white) ![Jupyter](https://img.shields.io/badge/Jupyter-F37626?style=flat&logo=jupyter&logoColor=white) |
 
 </div>
-
-[llama]: https://img.shields.io/badge/Llama_3.3_70B-0467DF?style=for-the-badge&logo=meta&logoColor=white
-[groq]: https://img.shields.io/badge/Groq_LPU-F55036?style=for-the-badge&logo=lightning&logoColor=white
-[hf]: https://img.shields.io/badge/Hugging_Face-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black
-[minilm]: https://img.shields.io/badge/all--MiniLM--L6--v2-6E6E6E?style=for-the-badge&logo=pytorch&logoColor=white
-[langchain]: https://img.shields.io/badge/LangChain-1C3C3C?style=for-the-badge&logo=chainlink&logoColor=white
-[chroma]: https://img.shields.io/badge/ChromaDB-FF6B6B?style=for-the-badge&logo=databricks&logoColor=white
-[tika]: https://img.shields.io/badge/Apache_Tika-D22128?style=for-the-badge&logo=apache&logoColor=white
-[ragas]: https://img.shields.io/badge/Ragas-6E56CF?style=for-the-badge&logoColor=white
-[ollama]: https://img.shields.io/badge/Ollama-000000?style=for-the-badge&logo=ollama&logoColor=white
-[qwen]: https://img.shields.io/badge/qwen2.5-615CED?style=for-the-badge&logo=qwen&logoColor=white
-[gemini]: https://img.shields.io/badge/Gemini_Flash--Lite-1C69FF?style=for-the-badge&logo=googlegemini&logoColor=white
-[docker]: https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white
-[ec2]: https://img.shields.io/badge/AWS_EC2-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white
-[wheel]: https://img.shields.io/badge/setup.py_%2B_wheel-3776AB?style=for-the-badge&logo=pypi&logoColor=white
-[python]: https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white
-[jupyter]: https://img.shields.io/badge/Jupyter-F37626?style=for-the-badge&logo=jupyter&logoColor=white
 
 
 ## ✨ Key Features
 
 <p align="center">
-  <img src="./docs/key-features.svg" alt="Six production-ready features: universal ingestion, session isolation, self-cleaning storage, smart deduplication, abuse-proof uploads, one pip install" width="100%"/>
+  <img src="./docs/RAG-key-features.png"
+       alt="Six production-ready features"
+       style="max-width: 900px; width: 100%; height: auto; border-radius: 16px;" />
 </p>
 
 ## 🧠 System Design Philosophy
@@ -84,7 +71,8 @@ IntelliQA is a packaged RAG backend that directly addresses each of the failure 
 At a high level, IntelliQA wraps four functional stages into one installable pipeline: a parser converts documents to text, an embedder converts text to vectors, a vector store holds them for similarity search, and an LLM generates answers grounded in the retrieved chunks.
 
 <p align="center">
-  <img src="./docs/IntelliQA.svg" alt="How RAG works in IntelliQA: parsing, embedding, retrieval, generation" width="100%"/>
+  <img src="./docs/Architecture_Overview.png" alt="How RAG works in IntelliQA: parsing, embedding, retrieval, generation" 
+  style="max-width: 1200px; width: 100%; height: auto; border-radius: 16px;"/>
 </p>
 
 ## 🏗️ System Architecture
@@ -93,22 +81,23 @@ The real system adds operational layers around the RAG core. Four layers in tota
 
 **Ingestion** &nbsp;·&nbsp; Apache Tika parses multi-format input; deduplication and chunking happen before vectors touch the store.
 
-**Storage** &nbsp;·&nbsp; ChromaDB persists 384-dimensional vectors from `all-MiniLM-L6-v2`, namespaced by session.
+**Storage** &nbsp;·&nbsp; ChromaDB persists 384-dimensional vectors from `bge-large-en-v1.5`, namespaced by session.
 
 **Generation** &nbsp;·&nbsp; Llama 3.3 70B Versatile (served on Groq LPU) generates answers bounded to retrieved context.
 
 **Operations** &nbsp;·&nbsp; Session lifecycle, per-session upload quotas, and a daily cron job for cleanup.
 
 <p align="center">
-  <img src="./docs/RAG%20Flow.png"
+  <img src="./docs/RAG_Pipeline.png"
        alt="IntelliQA architecture: full system with session isolation and lifecycle management"
-       style="height: 700px; width: auto;"/>
+       style="height: auto; width: 100%; border-radius: 16px;"/>
 </p>
 
 ## 🧠 Design Decision: Open Stack Over Managed APIs
 
 <p align="center">
-  <img src="./docs/design-decision.svg" alt="Architecture Rationale: comparison between managed-API trap and open-stack reality across cost, privacy, rate limits, and portability" width="100%"/>
+  <img src="./docs/design-decision.png" alt="Architecture Rationale: comparison between managed-API trap and open-stack reality across cost, privacy, rate limits, and portability" 
+  style="height: auto; width: 100%; border-radius: 16px;"/>
 </p>
 
 ## 🛠️ Challenges & Lessons Learned
