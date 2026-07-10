@@ -1,5 +1,6 @@
 # Import all necessary libraries
 import pandas as pd
+import time
 from eval import (prepare_testset_documents, 
                   generate_rag_responses, 
                   run_batch_evaluation,
