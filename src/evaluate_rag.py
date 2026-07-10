@@ -1,5 +1,6 @@
 from eval import run_batch_evaluation, get_score, save_file, get_results
 import time
+import argparse
 import json
 from ragas import RunConfig
 from ragas.llms import LangchainLLMWrapper
@@ -51,8 +52,14 @@ def main(rag_results, file_path):
         raise
 
 if __name__=="__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--sleep", type=int, default=0)
+    parser.add_argument("--rag_results", required=True)
+    parser.add_argument("--file_path", required=True)
+
+    args = parser.parse_args()
+
     print("Starting evaluation...")
-    # time.sleep(9000)
-    main(rag_results="evaluation/rag_results/rag_results_baseline.jsonl", 
-            file_path="evaluation/eval_results/rag_eval_baseline.jsonl")
-    print("Evaluation completed.")
+    time.sleep(args.sleep)
+    main(rag_results=args.rag_results, file_path=args.file_path)
+    print("Evaluation completed.")      
