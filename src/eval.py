@@ -7,27 +7,27 @@ import time
 from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
-from ragas import EvaluationDataset, RunConfig, evaluate
+from ragas import EvaluationDataset, evaluate
 from IPython.display import display, HTML
-from ragas.testset import TestsetGenerator   
+from ragas.testset import TestsetGenerator 
+from src.eval_config import *
 load_dotenv()
 from rag_pipeline.query_engine import load_data, ask_question, is_supported_file
 
-
-def prepare_testset_documents(eval_data_path, chunk_size=1000, chunk_overlap=50):
+def prepare_testset_documents(file_path, chunk_size, chunk_overlap):
     """
     Loads and prepares documents from a directory for synthetic QA generation.
 
     Args:
-        eval_data_path (str): Path to directory containing source documents.
-        chunk_size (int, optional): Size of each text chunk. Defaults to 1000.
-        chunk_overlap (int, optional): Overlap between consecutive chunks. Defaults to 50.
+        file_path (str): Path to directory containing source documents.
+        chunk_size (int, optional): Size of each text chunk.
+        chunk_overlap (int, optional): Overlap between consecutive chunks.
 
     Returns:
         list: List of loaded document objects.
     """
 
-    path = Path(eval_data_path)
+    path = Path(file_path)
     files = [str(file) for file in path.rglob("*") if file.is_file()]
 
     docs = []
@@ -111,7 +111,7 @@ def save_checkpoints(data, file_path):
         for record in records:
             f.write(json.dumps(record) + '\n')
 
-def load_processed_inputs(file_path):
+def load_processed_inputs(file_path, input_field):
         if not os.path.exists(file_path):
             return set()
 
@@ -119,7 +119,7 @@ def load_processed_inputs(file_path):
         with open(file_path, 'r') as f:
             for line in f:
                 try:
-                    processed_inputs.add(json.loads(line)['user_input'])
+                    processed_inputs.add(json.loads(line)[input_field])
                 except json.JSONDecodeError:
                     print(f"Skipping invalid JSON line in {file_path}")
         return processed_inputs
@@ -128,20 +128,10 @@ def generate_rag_responses(df, vectorstore_db, session_id, k, search_type, top_n
     """
     Runs a RAG pipeline over an input dataset and stores outputs incrementally as JSONL.
 
-    Args:
-        df (pd.DataFrame): Input dataset with user queries and references.
-        vectorstore_db: Vector store used for document retrieval.
-        session_id (str): Session identifier for scoped retrieval.
-        k (int, optional): Number of retrieved documents. Defaults to 4.
-        search_type (str, optional): Retrieval strategy (e.g., "similarity", "mmr").
-            Defaults to "similarity".
-        top_n (int, optional): Number of top documents to return after reranking. Defaults to 5.
-        file_path (str): Path to JSONL file for incremental saving.
-
     Returns:
         None
     """    
-    processed_inputs = load_processed_inputs(file_path)
+    processed_inputs = load_processed_inputs(file_path, "user_input")
 
     for i, row in enumerate(df.itertuples(index=False), start=1):
         try:
@@ -177,7 +167,7 @@ def generate_rag_responses(df, vectorstore_db, session_id, k, search_type, top_n
 
 def run_batch_evaluation(rag_results, metrics, run_config, file_path):
 
-    evaluated_inputs = load_processed_inputs(file_path)
+    evaluated_inputs = load_processed_inputs(file_path, "user_input")
 
     for i, data in enumerate(rag_results, start=1):
         if data['user_input'] in evaluated_inputs:

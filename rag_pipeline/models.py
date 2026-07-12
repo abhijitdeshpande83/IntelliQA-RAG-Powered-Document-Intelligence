@@ -3,7 +3,6 @@ from functools import lru_cache
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from langchain_postgres import PGVector
-from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import CrossEncoderReranker
 from langchain_community.cross_encoders import HuggingFaceCrossEncoder
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -72,4 +71,4 @@ def get_reranker(top_n=RERANK_TOP_N):
     return CrossEncoderReranker(
                     model=get_cross_encoder(),
                     top_n=RERANK_TOP_N
-                    )   
+                    )

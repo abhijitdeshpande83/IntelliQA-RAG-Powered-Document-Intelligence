@@ -11,6 +11,7 @@ RERANK_TOP_N = 8
 SEARCH_TYPE = "similarity"
 RETURN_METADATA = True
 
+TEST_DATA_PATH = "evaluation/eval_data"
 QA_TESTSET_PATH = "evaluation/testset/new_testset_rewritten.jsonl"
 
 RAG_GENERATION_OUTPUT_PATH = "evaluation/rag_results/rag_results_v6.jsonl"

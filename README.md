@@ -7,28 +7,23 @@
       alt="Live Demo: IntelliQA"
     />
   </a>
-  <img src="https://img.shields.io/badge/v3.2-22C55E?style=for-the-badge&labelColor=111827" alt="Version 3.2" />
+  <img src="https://img.shields.io/badge/v3.3-22C55E?style=for-the-badge&labelColor=111827" alt="Version 3.3" />
 </p>
 
+IntelliQA is a production-oriented Retrieval Augmented Generation backend for grounded question answering over private documents. Core logic ships as a Python wheel (`rag_pipeline`), so the same package powers a notebook demo, a live portfolio site, and an API service without rewrites.
 
-## System Overview
+Sessions are isolated so there is no cross-user leakage, uploads are capped and deduplicated, and a scheduled cron job manages storage. The model answers only from retrieved chunks at `temperature=0` and refuses when context is insufficient. Retrieval quality is not asserted, it is **measured** with a RAGAS evaluation harness that drives every tuning decision below.
 
-IntelliQA is a **production-oriented Retrieval Augmented Generation (RAG) backend** for grounded question answering over private documents. Core logic ships as a Python wheel so the same package can power a notebook demo today and an API service tomorrow without rewrites.
-
-> The driving question: **how do you make LLM answers reliable, multi-tenant, and operationally sustainable on private documents?**
+> **The driving question:** how do you make LLM answers reliable, multi-tenant, and operationally sustainable on private documents?
 
 ## Problem Statement
 
 <p align="center">
-  <img src="./docs/RAG-Comparison.png" alt="Why Standard RAG Fails in Production: three pillars covering hallucination, prototype fragility, and vendor lock-in" 
+  <img src="./docs/RAG-Comparison.png" alt="Why standard RAG fails in production: hallucination, prototype fragility, vendor lock-in"
   style="max-width: 900px; width: 100%; height: auto; border-radius: 16px;" />
 </p>
 
-## TL;DR
-
-IntelliQA is a packaged RAG backend that directly addresses each of the failure modes above. Sessions are **isolated** (no cross-user leakage), capped at **5 uploads** (abuse prevention), content is **deduplicated** at ingestion, and a **scheduled cron job** manages disk space. Generation runs on **Llama 3.3 70B via Groq** against a persistent **ChromaDB** store. Retrieval quality is measured by a dedicated **RAGAS evaluation harness** (baseline established, retrieval tuning in progress). Shipped as the `rag_pipeline` Python wheel and powering the live demo at [theanalyticmind.com/projects/intelliqa](https://theanalyticmind.com/projects/intelliqa/).
-
-## 🛠️ Tech Stack
+## Tech Stack
 
 <div align="center">
 
@@ -36,17 +31,17 @@ IntelliQA is a packaged RAG backend that directly addresses each of the failure 
 | :--- | :--- |
 | **LLM & Inference** | ![OpenAI GPT-OSS 120B](https://img.shields.io/badge/OpenAI_GPT--OSS_120B-412991?style=flat&logo=openai&logoColor=white) ![Groq LPU](https://img.shields.io/badge/Groq_LPU-F55036?style=flat&logo=cpu&logoColor=white) |
 | **Embeddings** | ![Hugging Face](https://img.shields.io/badge/Hugging_Face-FFD21E?style=flat&logo=huggingface&logoColor=black) ![BAAI/bge-large-en-v1.5](https://img.shields.io/badge/BAAI_bge--large--en--v1.5-0052CC?style=flat&logo=target&logoColor=white) |
-| **RAG Framework** | ![LangChain](https://img.shields.io/badge/LangChain-1C3C3A?style=flat&logo=langchain&logoColor=white) ![PGVector](https://img.shields.io/badge/PGVector-4169E1?style=flat&logo=postgresql&logoColor=white) |
-| **Document Parsing**| ![Apache Tika](https://img.shields.io/badge/Apache_Tika-E65100?style=flat&logo=apache&logoColor=white) |
-| **Evaluation** | ![Ragas](https://img.shields.io/badge/Ragas-FF6F00?style=flat&logo=googleanalytics&logoColor=white) ![Ollama](https://img.shields.io/badge/Ollama-000000?style=flat&logo=ollama&logoColor=white) ![Qwen2.5](https://img.shields.io/badge/Qwen_2.5-551A8B?style=flat&logo=qwen&logoColor=white) ![Gemini](https://img.shields.io/badge/Google_Gemini-8E75FF?style=flat&logo=googlegemini&logoColor=white) |
+| **Reranking** | ![Cross-Encoder](https://img.shields.io/badge/Cross--Encoder_ms--marco--MiniLM-6E56CF?style=flat&logo=huggingface&logoColor=white) |
+| **RAG Framework** | ![LangChain](https://img.shields.io/badge/LangChain-1C3C3A?style=flat&logo=langchain&logoColor=white) |
+| **Vector Store** | ![PGVector](https://img.shields.io/badge/PGVector-4169E1?style=flat&logo=postgresql&logoColor=white) ![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?style=flat&logo=supabase&logoColor=white) |
+| **Document Parsing** | ![Apache Tika](https://img.shields.io/badge/Apache_Tika-E65100?style=flat&logo=apache&logoColor=white) |
+| **Evaluation** | ![Ragas](https://img.shields.io/badge/Ragas-FF6F00?style=flat&logo=googleanalytics&logoColor=white) ![Gemini](https://img.shields.io/badge/Gemini_Flash--Lite_(judge)-8E75FF?style=flat&logo=googlegemini&logoColor=white) ![Ollama](https://img.shields.io/badge/Ollama-000000?style=flat&logo=ollama&logoColor=white) |
 | **Deployment** | ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white) ![AWS EC2](https://img.shields.io/badge/AWS_EC2-FF9900?style=flat&logo=amazonec2&logoColor=white) |
-| **Packaging** | ![setup.py + wheel](https://img.shields.io/badge/setup.py_%2B_wheel-3776AB?style=flat&logo=python&logoColor=white) |
-| **Language** | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white) ![Jupyter](https://img.shields.io/badge/Jupyter-F37626?style=flat&logo=jupyter&logoColor=white) |
+| **Packaging** | ![wheel](https://img.shields.io/badge/setup.py_%2B_wheel-3776AB?style=flat&logo=python&logoColor=white) |
 
 </div>
 
-
-## ✨ Key Features
+## Key Features
 
 <p align="center">
   <img src="./docs/RAG-key-features.png"
@@ -54,36 +49,17 @@ IntelliQA is a packaged RAG backend that directly addresses each of the failure 
        style="max-width: 900px; width: 100%; height: auto; border-radius: 16px;" />
 </p>
 
-## 🧠 System Design Philosophy
+## Architecture
 
-**1. Grounded Generation.** LLM runs at `temperature=0` and answers only from retrieved chunks. No speculation.
+At its core, IntelliQA wraps four stages into one installable pipeline: a parser converts documents to text, an embedder converts text to vectors, a vector store holds them for similarity search, and an LLM generates answers grounded in the retrieved chunks. The production system adds operational layers around that core.
 
-**2. Multi-Tenant Isolation.** Documents and queries are namespaced per session. Each user retrieves only from their own uploads.
+**Ingestion** &nbsp;·&nbsp; Apache Tika (long-lived server) parses multi-format input. Text is normalized, deduplicated by content hash, and chunked before vectors touch the store.
 
-**3. Operational Discipline.** Upload quotas, scheduled cleanup, and deduplication are first-class features, not afterthoughts.
+**Storage** &nbsp;·&nbsp; PGVector on Supabase persists 1024-dimensional vectors from `bge-large-en-v1.5`. Tenant isolation is enforced by a `session_id` in each chunk's metadata, filtered at retrieval time.
 
-**4. Package-First Distribution.** Core RAG logic ships as a Python wheel. The notebook is a demo. The wheel is the product, and it powers the live portfolio site.
+**Retrieval** &nbsp;·&nbsp; Dense similarity search retrieves a wide candidate set, then a cross-encoder reranker reorders and trims it before generation.
 
-**5. Honest Boundaries.** The system can fail in known ways: retrieval misses, ambiguous source documents, questions outside the indexed content. Design decisions surface these failure modes rather than hide them. `temperature=0` is for reproducibility, not zero hallucination; the prompt instructs the model to say "I don't know" when retrieved context is insufficient. These failure modes are not just asserted — they are **measured** (see Evaluation).
-
-## 🏗️ How RAG Works in IntelliQA
-
-At a high level, IntelliQA wraps four functional stages into one installable pipeline: a parser converts documents to text, an embedder converts text to vectors, a vector store holds them for similarity search, and an LLM generates answers grounded in the retrieved chunks.
-
-<p align="center">
-  <img src="./docs/Architecture_Overview.png" alt="How RAG works in IntelliQA: parsing, embedding, retrieval, generation" 
-  style="max-width: 1200px; width: 100%; height: auto; border-radius: 16px;"/>
-</p>
-
-## 🏗️ System Architecture
-
-The real system adds operational layers around the RAG core. Four layers in total:
-
-**Ingestion** &nbsp;·&nbsp; Apache Tika parses multi-format input; deduplication and chunking happen before vectors touch the store.
-
-**Storage** &nbsp;·&nbsp; ChromaDB persists 384-dimensional vectors from `bge-large-en-v1.5`, namespaced by session.
-
-**Generation** &nbsp;·&nbsp; Llama 3.3 70B Versatile (served on Groq LPU) generates answers bounded to retrieved context.
+**Generation** &nbsp;·&nbsp; GPT-OSS 120B (served on Groq LPU) at `temperature=0`, prompted to answer only from retrieved context and to refuse when the context is insufficient.
 
 **Operations** &nbsp;·&nbsp; Session lifecycle, per-session upload quotas, and a daily cron job for cleanup.
 
@@ -93,74 +69,90 @@ The real system adds operational layers around the RAG core. Four layers in tota
        style="height: auto; width: 100%; border-radius: 16px;"/>
 </p>
 
-## 🧠 Design Decision: Open Stack Over Managed APIs
+## Evaluation
 
-<p align="center">
-  <img src="./docs/design-decision.png" alt="Architecture Rationale: comparison between managed-API trap and open-stack reality across cost, privacy, rate limits, and portability" 
-  style="height: auto; width: 100%; border-radius: 16px;"/>
-</p>
+RAG quality is measured with a [RAGAS](https://github.com/explodinggradients/ragas) harness built on four metrics, so every component change (chunk size, retrieval `k`, embeddings, reranking) can be compared against a fixed baseline rather than guessed at.
 
-## 🛠️ Challenges & Lessons Learned
+| Metric | What it measures |
+|:---|:---|
+| **Faithfulness** | Does the answer follow from the retrieved chunks? *(generation grounding)* |
+| **Answer Relevancy** | Does the response actually address the question? *(generation quality)* |
+| **Context Precision** | Of the chunks retrieved, what fraction are relevant? *(retrieval ranking)* |
+| **Context Recall** | Of the chunks needed to answer, how many were retrieved? *(retrieval coverage)* |
 
-A few real engineering hurdles surfaced during the IntelliQA build that shaped the current architecture.
+**Harness.** ~50 synthetic question-answer pairs generated with RAGAS over a deliberately diverse corpus (financial filings, tax publications, legal agreements, medical and structural engineering papers) to mirror the arbitrary documents a real user might upload. Each question is answered by the live pipeline; retrieved chunks, generated answer, and reference are scored by an LLM judge (Gemini Flash-Lite), with results checkpointed to JSONL so long runs survive rate limits.
 
-### 1. Apache Tika JVM warm-up cost
+### The finding that mattered most: the test set was the bug
 
-Tika runs on the JVM, and spawning a fresh JVM per request caused unacceptable cold-start latency on first document upload. The fix was to run a long-lived Tika server on EC2 and proxy requests to it, reducing parse time from seconds to milliseconds. Tika is fast when warm, but slow if treated like a CLI tool.
+Early scores looked poor, with answer relevancy near `0.31` and recall stuck no matter how `k` was raised. The instinct was to keep tuning retrieval. The data said otherwise.
 
----
+The auto-generated questions were **vague by construction**. Generated one chunk at a time, they never named the entity they were about, asking things like *"what is the unrecognized tax benefit?"* against a corpus holding many near-identical filings. No retriever can resolve that, and RAGAS answer relevancy penalizes vague questions mechanically, since it reverse-generates questions from the answer and compares them to the original.
 
-### 2. Disk pressure on shared EC2
+The fix was to rebuild the test set: generate per document so the source entity is known, then rewrite each question to name it. **Answer relevancy roughly doubled with zero changes to the RAG itself**, proving the low scores were a measurement artifact, not a retrieval failure.
 
-The same EC2 instance hosts both the portfolio site and IntelliQA. Without lifecycle management, ChromaDB storage would grow unbounded and Tika temp files would accumulate. This directly led to a cron-based cleanup approach instead of relying on managed storage. Lesson: shared infrastructure requires explicit cleanup design.
+The lesson generalizes: an evaluation set is a first-class artifact, and it needs validating before you trust a single number it produces.
 
----
+### Retrieval tuning against the rebuilt test set
 
-### 3. Embedding model trade-off
+With a test set that could be trusted, `k` was swept one variable at a time.
 
-`all-MiniLM-L6-v2` (384 dims) was chosen over larger models like `bge-large-en` (1024 dims) despite lower accuracy. The trade-off was CPU efficiency, no API cost, and a smaller vector store. Performance is sufficient for most Q&A tasks, but worth revisiting if retrieval quality drops.
+| Config | Context Precision | Context Recall | Faithfulness | Answer Relevancy |
+|:---|:---:|:---:|:---:|:---:|
+| `k=4` (baseline) | **0.364** | 0.495 | 0.729 | 0.703 |
+| `k=10` | 0.352 | 0.629 | 0.716 | 0.788 |
+| `k=15` | 0.348 | 0.642 | 0.685 | **0.819** |
+| `k=20` | 0.348 | **0.707** | **0.736** | 0.800 |
+| `k=20` + rerank top-5 | **0.412** | 0.539 | 0.725 | 0.775 |
 
----
+**What this shows:**
 
-### 4. Hallucination outside retrieved context
+- **Recall climbs with `k` while precision stays flat (~0.35).** Retrieval finds the answer-bearing chunks when given room, but cannot rank them to the top. That flat precision across a 5x change in `k` is the textbook signal for a reranker.
+- **The cross-encoder reranker lifts precision (`0.348` → `0.412`) but costs recall (`0.707` → `0.539`).** Trimming 20 chunks to a top-5 discards content that multi-fact answers need. A reranker reorders what retrieval found, it cannot recover what retrieval missed, so `top_n` is a precision-versus-context knob, not a recall lever.
+- **Tuning `top_n` is the current work**, finding the point where precision stays above baseline while recall returns toward `0.70`.
 
-Even at temperature=0, the LLM occasionally answered from training data when retrieved context was weak. Updating the system prompt to enforce <span style="color:#ff7f50;"> answer only from the provided context; if the context does not contain the answer, say so </span> reduced this significantly. This reflects the _Honest Boundaries_ design principle.
+> Every row above is one variable changed against a frozen test set. That discipline, not any single score, is the point of the harness.
 
----
+## Installation & Usage
 
-### 5. Clean extraction is a retrieval concern, not cosmetics
+### Option 1: Install the prebuilt wheel
 
-Raw Tika output carried structural noise - tabs, non-breaking spaces, and PDF hyphenation splits (e.g. `vesi-\ncles`). Beyond wasting tokens, split words fail to match at retrieval time. Normalizing extracted text before chunking is a small change with a direct effect on embedding quality, surfaced only because the evaluation harness made retrieval failures visible.
-
-## 🚀 Installation & Usage
-
-### Option 1: Install the Prebuilt Wheel
-*Use this if you want IntelliQA as a ready-to-use RAG backend in your own application.* This is the path used by the live portfolio site.
+Use this if you want IntelliQA as a ready-to-use RAG backend. This is the path the live site uses.
 
 ```bash
 git clone https://github.com/abhijitdeshpande83/IntelliQA-RAG-Powered-Document-Intelligence.git
 cd IntelliQA-RAG-Powered-Document-Intelligence
-pip install dist/rag_pipeline-3.1-py3-none-any.whl
-export GROQ_API_KEY="groq-key-here"
+pip install dist/rag_pipeline-3.2-py3-none-any.whl
 ```
 
-Import and use anywhere:
+Set credentials in a `.env` file at the project root:
+
+```bash
+GROQ_API_KEY="your-groq-key"
+DATABASE_URL="your-postgres-connection-string"
+```
+
+Then import and use:
 
 ```python
-from rag_pipeline import query_engine, vector_store, utils, is_supported_file
+from rag_pipeline.query_engine import load_data, vectorstore, ask_question, is_supported_file
+
+chunks = load_data("report.pdf", session_id="abc123", file_name="report.pdf")
+store = vectorstore(documents=chunks)
+answer = ask_question("What was the reported revenue?", store, session_id="abc123")
 ```
 
-The package exposes three modules:
+The package exposes:
 
-- `rag_pipeline.utils`: parsing, chunking, deduplication
-- `rag_pipeline.vector_store`: Chroma setup and indexing
-- `rag_pipeline.query_engine`: retrieval, prompt assembly, generation
-- `rag_pipeline.is_supported_file`: checks if a file type is supported for RAG ingestion
+- `rag_pipeline.config` — model names and tuning defaults (`k`, `top_n`, chunk size)
+- `rag_pipeline.utils` — parsing, chunking, deduplication
+- `rag_pipeline.vector_store` — PGVector setup and indexing
+- `rag_pipeline.query_engine` — retrieval, reranking, prompt assembly, generation
 
-See `IntelliQA.ipynb` for end-to-end usage examples.
+See `IntelliQA.ipynb` for end-to-end examples.
 
-### Option 2: Install from Source
-*Use this if you want to read, modify, or extend the core RAG logic.* The editable install (`pip install -e .`) picks up source changes immediately without reinstalling.
+### Option 2: Install from source
+
+Use this to read, modify, or extend the core RAG logic.
 
 ```bash
 git clone https://github.com/abhijitdeshpande83/IntelliQA-RAG-Powered-Document-Intelligence.git
@@ -172,83 +164,25 @@ source venv/bin/activate              # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 pip install -e .
 
-export GROQ_API_KEY="groq-key-here"
 jupyter notebook IntelliQA.ipynb
 ```
 
-## 🚧 Current Status
+## Challenges & Lessons Learned
+
+**Apache Tika JVM warm-up.** Spawning a fresh JVM per request caused unacceptable cold-start latency. Running a long-lived Tika server and proxying to it cut parse time from seconds to milliseconds. Tika is fast when warm, slow when treated like a CLI tool.
+
+**Disk pressure on shared EC2.** The instance hosts both the portfolio site and IntelliQA, so vector storage and Tika temp files would grow unbounded. This drove the cron-based cleanup design. Shared infrastructure requires explicit lifecycle management.
+
+**Embedding upgrade, measured not assumed.** The pipeline started on `all-MiniLM-L6-v2` (384 dims) for CPU efficiency. Migrating to `bge-large-en-v1.5` (1024 dims) was justified by measured retrieval gains on the eval harness, not by benchmark reputation.
+
+**Clean extraction is a retrieval concern, not cosmetics.** Raw Tika output carried tabs, non-breaking spaces, and PDF hyphenation splits (`vesi-\ncles`). Split words fail to match at retrieval time. Normalizing text before chunking is a small change with a direct effect on embedding quality, and it was only visible because the eval harness surfaced retrieval failures.
+
+**Over-refusal was a prompt problem, not a noise problem.** The default RetrievalQA prompt was too conservative, refusing whenever the answer was not stated word-for-word. Cleaning the text did not reduce refusals; rewriting the prompt to permit partial and rephrased context did.
+
+## Status
 
 |  |  |
 | --- | --- |
-| **Shipped** | Core pipeline, session isolation, upload quota, scheduled cleanup, AWS EC2 deployment, `rag_pipeline-3.1` wheel, RAGAS evaluation harness + baseline |
-| **In progress** | Retrieval tuning guided by eval findings — document-scoped retrieval, hybrid search, and reranking |
-
-## 📏 Evaluation
-
-RAG quality is measured with a dedicated [RAGAS](https://github.com/explodinggradients/ragas) harness built around four retrieval-and-generation metrics rather than generic LLM benchmarks. The goal is not a single headline score but a **repeatable way to locate where the pipeline succeeds or fails**, so component changes (chunk size, retrieval `k`, embeddings, reranking) can be compared against a fixed baseline.
-
-### Metrics
-
-- **Faithfulness** &nbsp;·&nbsp; Does the answer follow from the retrieved chunks, or does the model introduce unsupported claims? *(generation grounding)*
-- **Answer Relevancy** &nbsp;·&nbsp; Does the response actually address the question asked? *(generation quality)*
-- **Context Precision** &nbsp;·&nbsp; Of the chunks retrieved, what fraction are relevant? *(retrieval ranking)*
-- **Context Recall** &nbsp;·&nbsp; Of the chunks needed to answer, how many were retrieved? *(retrieval coverage)*
-
-### Harness
-
-The evaluation set is **32 synthetic question-answer pairs** generated with the RAGAS `TestsetGenerator` over a deliberately diverse corpus - financial filings (10-K / 8-K), tax publications, a commercial legal agreement, and academic papers - to mirror the arbitrary documents a real user might upload. Each question is answered by the live pipeline, and the **retrieved chunks, generated answer, and reference answer** are scored by an LLM-as-judge.
-
-> **Infrastructure note.** Test-set generation is a heavy, one-time batch - RAGAS builds a knowledge graph with several LLM calls per chunk, so cost scales with the *documents fed in*, not the number of questions requested. Running this on free-tier hosted models repeatedly hit per-minute and per-day token limits. The resolution was a deliberate split: **local Ollama (`qwen2.5`)** for the uncapped batch generation, and a **free, higher-quota hosted judge (Gemini Flash-Lite)** for scoring. Matching the model to the job is itself a cost lesson baked into the harness.
-
-### Baseline Results (32 questions, `k = 4`)
-
-| Metric | Score | Reads as |
-|:---|:---:|:---|
-| **Faithfulness** | `0.75` | Generation is sound - answers stay grounded in retrieved context |
-| **Answer Relevancy** | `0.63` | Mostly on-topic; partly lowered by *correct* "I don't know" refusals |
-| **Context Precision** | `0.32` | Retrieval pulls noticeable noise alongside relevant chunks |
-| **Context Recall** | `0.38` | Retrieval often misses the chunk that holds the answer |
-
-### What the Baseline Revealed
-
-The metric **shape** - high faithfulness, low recall and precision - points cleanly at one conclusion: **generation is healthy, retrieval is the bottleneck.** The model uses what it is given faithfully; it is simply being handed the wrong or incomplete chunks.
-
-Diagnosing further, changing **one variable at a time**:
-
-- **Raising retrieval `k` from 4 → 8 did not change recall** (held at `0.375`, while precision *dropped*). More chunks did not help - so the answer-bearing chunk is not merely ranked just outside the cutoff, it is genuinely not being matched. `k` is not the lever.
-- **The dominant failure mode is question ambiguity over near-identical documents.** The corpus holds many highly similar financial filings, and the generated questions are phrased only against their source chunk without naming the company - e.g. "what is the unrecognized tax benefit?" when several filings each contain one. Neither the user nor the retriever can tell which document is meant, so correct retrieval is near-impossible by construction. The fix is question specificity and document-scoped retrieval, not more chunks.
-- **Data hygiene helped, but was not the main lever.** Excluding CSVs (which exploded into thousands of low-value chunks) and cleaning extraction artifacts improved input quality and token cost - but recall barely moved, consistent with the failure being *question ambiguity* rather than noisy text.
-
-### Next Steps - Retrieval Tuning (in progress)
-
-The diagnosis directs the remaining work toward retrieval, not generation:
-
-1. **Test-set specificity** - separating how real users phrase questions (specific vs. ambiguous) and measuring each mode on its own.
-2. **Hybrid retrieval (BM25 + dense)** - to catch exact-term misses (e.g. defined acronyms) that pure semantic search drops.
-3. **Cross-encoder reranking** - retrieve wide for recall, rerank to keep a precise top-`k`.
-
-> This is a **baseline, not a final result.** The value of the harness is that every tuning step above can now be **measured against the table** rather than guessed at - change one variable, re-score, attribute the difference.
-
-## 🚫 Out of Scope
-
-A few capabilities are explicitly **not** part of IntelliQA's design. These are deliberate non-goals, not gaps:
-
-- **User authentication.** Sessions are isolated by ID; authentication and user-account management are the responsibility of the calling application. IntelliQA is a backend, not a SaaS product.
-- **Long-term knowledge accumulation.** Each session is ephemeral. IntelliQA does not build a persistent knowledge base across users or across time. Documents are scoped to the session that uploaded them and are subject to scheduled cleanup.
-- **Document editing or partial updates.** Modifying an indexed document requires re-uploading it. There is no in-place edit path.
-
-## 🚀 Future Improvements
-
-Several of these are now **evidence-backed by the evaluation findings** rather than speculative:
-
-- **Hybrid retrieval (BM25 + dense vector)** - targets the exact-term retrieval misses observed in the baseline.
-- **Cross-encoder reranking on retrieved chunks** - decouples recall (retrieve wide) from precision (keep a reranked top-`k`).
-- **Metadata-scoped retrieval** - directly addresses the cross-document confusion identified as the primary failure mode.
-- **Inline citations** linking answers back to source chunks.
-- **Streaming responses** for lower perceived latency.
-
-## 💡 System Value
-
-IntelliQA shows that a RAG backend can be **grounded, multi-tenant, operationally sound, and portable** without depending on managed APIs - and that its quality can be **measured and diagnosed**, not just asserted. The production discipline (session isolation, upload quotas, scheduled cleanup, deduplication) is built into the package, not bolted on later, and the evaluation harness turns "it works" into "here is where it works, here is where it doesn't, and here is the number it moves."
-
-> Production-grade RAG, distributed as a wheel, measured by a reproducible eval harness, powering a live portfolio site today.
+| **Shipped** | Core pipeline, session isolation, upload quotas, deduplication, scheduled cleanup, PGVector migration, `bge-large` embeddings, GPT-OSS 120B generation, AWS EC2 deployment, `rag_pipeline-3.2` wheel, RAGAS evaluation harness with a validated test set, cross-encoder reranking |
+| **In progress** | Reranker `top_n` tuning to recover recall while holding the precision gain |
+| **Next** | Wider candidate pools feeding the reranker; parent-document retrieval to resolve the recall-versus-context tradeoff structurally; hybrid retrieval (BM25 + dense) for exact-term misses; inline citations linking answers to source chunks |

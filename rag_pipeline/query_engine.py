@@ -1,9 +1,3 @@
-import os
-import re
-import warnings
-from tika import parser
-from rag_pipeline.utils import parse, supported_file_types, get_file_extension
-from langchain_groq import ChatGroq
 from langchain.chains import RetrievalQA
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
@@ -12,7 +6,7 @@ from langchain.retrievers import ContextualCompressionRetriever
 from rag_pipeline.vector_store import get_vector_store
 from rag_pipeline.config import *
 from rag_pipeline.models import get_llm, get_reranker
-warnings.filterwarnings("ignore")
+from rag_pipeline.utils import parse, supported_file_types, get_file_extension
 
 llm = get_llm()
 
@@ -82,11 +76,8 @@ def vectorstore(documents=None, batch_size=BATCH_SIZE):
 def ask_question(question, vectorstore, session_id, return_metadata=RETURN_METADATA, 
                     k=RETRIEVAL_K, search_type=SEARCH_TYPE, top_n=RERANK_TOP_N):
     """
-    Runs a Retrieval-Augmented Generation (RAG) pipeline for a query.
-
-    Retrieves relevant documents filtered by session_id and generates
-    a response using an LLM. Optionally returns the complete retrieval
-    output for evaluation purposes.
+    Runs a RAG pipeline to retrieve session-filtered documents and generate an LLM response, 
+    optionally returning retrieval details for evaluation.
 
     Args:
         question (str): Input query.

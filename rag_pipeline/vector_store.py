@@ -1,9 +1,4 @@
-import os
-from .models import get_embeddings, get_pgvectore
-
-# embeddings = HuggingFaceEmbeddings(
-#     model_name="sentence-transformers/all-MiniLM-L6-v2"
-#     )
+from rag_pipeline.models import get_embeddings, get_pgvectore
 
 def get_vector_store(documents=None, batch_size=1000):
     """
@@ -18,4 +13,3 @@ def get_vector_store(documents=None, batch_size=1000):
             vectorestore.add_documents(documents=batch)
         print("Successfully added documents to PGVector.")
     return vectorestore
-        

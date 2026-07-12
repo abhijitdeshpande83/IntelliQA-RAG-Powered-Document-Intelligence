@@ -4,6 +4,7 @@ from ragas import RunConfig
 from ragas.llms import LangchainLLMWrapper
 from ragas.embeddings import LangchainEmbeddingsWrapper
 from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_ollama import ChatOllama 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from src.eval_config import *
 from ragas.metrics import (
@@ -13,6 +14,24 @@ from ragas.metrics import (
                             ResponseRelevancy,
                             )
 load_dotenv()
+
+@lru_cache(maxsize=1)
+def get_generator_llm():
+    """
+    Initializes and returns a cached instance of the generator LLM.
+
+    Returns:
+        LangchainLLMWrapper: Configured LLM instance.
+
+    """
+    return LangchainLLMWrapper(
+                ChatOllama(
+                    model=LLM_GENERATOR,
+                    temperature=TEMPERATURE,
+                    # model_kwargs={"response_format":{"type":"json_object"}}
+                    format="json"
+                    )
+                )
 
 @lru_cache(maxsize=1)
 def get_evaluator_llm():
@@ -28,8 +47,9 @@ def get_evaluator_llm():
                     temperature=TEMPERATURE,
                     )
                 )
+
 @lru_cache(maxsize=1)
-def get_evaluator_embeddings():
+def get_eval_embeddings():
     """
     Initializes and returns a cached instance of the evaluator embeddings.
 
@@ -55,7 +75,7 @@ def get_metrics():
             LLMContextPrecisionWithReference(llm=get_evaluator_llm()),
             LLMContextRecall(llm=get_evaluator_llm()),
             Faithfulness(llm=get_evaluator_llm()),
-            ResponseRelevancy(llm=get_evaluator_llm(), embeddings=get_evaluator_embeddings()),
+            ResponseRelevancy(llm=get_evaluator_llm(), embeddings=get_eval_embeddings()),
             ]
 
 def get_run_config():
