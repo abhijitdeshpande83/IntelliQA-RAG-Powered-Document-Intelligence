@@ -94,21 +94,23 @@ The lesson generalizes: an evaluation set is a first-class artifact, and it need
 
 ### Retrieval tuning against the rebuilt test set
 
-With a test set that could be trusted, `k` was swept one variable at a time.
+With a test set that could be trusted, one variable was changed at a time.
 
 | Config | Context Precision | Context Recall | Faithfulness | Answer Relevancy |
-|:---|:---:|:---:|:---:|:---:|
-| `k=4` (baseline) | **0.364** | 0.495 | 0.729 | 0.703 |
+| :--- | :---: | :---: | :---: | :---: |
+| `k=4` (baseline) | 0.364 | 0.495 | 0.729 | 0.703 |
 | `k=10` | 0.352 | 0.629 | 0.716 | 0.788 |
 | `k=15` | 0.348 | 0.642 | 0.685 | **0.819** |
 | `k=20` | 0.348 | **0.707** | **0.736** | 0.800 |
 | `k=20` + rerank top-5 | **0.412** | 0.539 | 0.725 | 0.775 |
+| `k=20` + rerank top-8 | 0.410 | 0.629 | 0.729 | 0.759 |
 
 **What this shows:**
 
-- **Recall climbs with `k` while precision stays flat (~0.35).** Retrieval finds the answer-bearing chunks when given room, but cannot rank them to the top. That flat precision across a 5x change in `k` is the textbook signal for a reranker.
-- **The cross-encoder reranker lifts precision (`0.348` → `0.412`) but costs recall (`0.707` → `0.539`).** Trimming 20 chunks to a top-5 discards content that multi-fact answers need. A reranker reorders what retrieval found, it cannot recover what retrieval missed, so `top_n` is a precision-versus-context knob, not a recall lever.
-- **Tuning `top_n` is the current work**, finding the point where precision stays above baseline while recall returns toward `0.70`.
+- **Recall climbs with `k` while precision stays flat (~0.35).** Retrieval finds the answer-bearing chunks when given room, but cannot rank them to the top. Flat precision across a 5x change in `k` is both the textbook signal for a reranker and a property of the metric: context precision is an order-aware, Average-Precision-style score normalized by the number of relevant chunks rather than by `k`, so it measures ranking quality, not retrieval depth.
+- **The reranker lifts precision (`0.348` → `0.412`) at the cost of recall (`0.707` → `0.539`).** A reranker reorders what retrieval found, it cannot recover what retrieval missed, so `top_n` is a precision-versus-context knob, not a recall lever.
+- **Raising `top_n` from 5 to 8 recovers recall for free** (`0.539` → `0.629`) with precision effectively unchanged (`0.412` → `0.410`). Top-8 is the current operating point: it keeps the precision gain over raw `k=20` while returning most of the recall.
+- **Precision is treated as a cost and latency diagnostic, not a quality gate.** Faithfulness and answer relevancy hold steady as context grows, meaning the generator ignores retrieved noise rather than being misled by it. Faithfulness and recall are what get gated on.
 
 > Every row above is one variable changed against a frozen test set. That discipline, not any single score, is the point of the harness.
 
@@ -121,7 +123,7 @@ Use this if you want IntelliQA as a ready-to-use RAG backend. This is the path t
 ```bash
 git clone https://github.com/abhijitdeshpande83/IntelliQA-RAG-Powered-Document-Intelligence.git
 cd IntelliQA-RAG-Powered-Document-Intelligence
-pip install dist/rag_pipeline-3.2-py3-none-any.whl
+pip install dist/rag_pipeline-3.3-py3-none-any.whl
 ```
 
 Set credentials in a `.env` file at the project root:
@@ -181,8 +183,8 @@ jupyter notebook IntelliQA.ipynb
 
 ## Status
 
-|  |  |
-| --- | --- |
-| **Shipped** | Core pipeline, session isolation, upload quotas, deduplication, scheduled cleanup, PGVector migration, `bge-large` embeddings, GPT-OSS 120B generation, AWS EC2 deployment, `rag_pipeline-3.2` wheel, RAGAS evaluation harness with a validated test set, cross-encoder reranking |
-| **In progress** | Reranker `top_n` tuning to recover recall while holding the precision gain |
-| **Next** | Wider candidate pools feeding the reranker; parent-document retrieval to resolve the recall-versus-context tradeoff structurally; hybrid retrieval (BM25 + dense) for exact-term misses; inline citations linking answers to source chunks |
+| Stage | Details |
+| :--- | :--- |
+| **Shipped** | Core pipeline, session isolation, upload quotas, deduplication, scheduled cleanup, PGVector migration, `bge-large` embeddings, GPT-OSS 120B generation, cross-encoder reranking, AWS EC2 deployment, `rag_pipeline-3.3` wheel, RAGAS evaluation harness with a rebuilt and validated test set |
+| **In progress** | Hand-scoring a subset of the synthetic test set, since narrow auto-generated references likely understate context precision |
+| **Next** | Hybrid retrieval (BM25 + dense) for exact-term misses across filings and legal clauses; contextual retrieval to preserve parent context within chunks; parent-document retrieval to resolve the recall-versus-context tradeoff structurally; inline citations |

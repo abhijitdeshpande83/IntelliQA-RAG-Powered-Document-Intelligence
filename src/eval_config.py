@@ -19,3 +19,5 @@ RAG_EVALUATION_OUTPUT_PATH = "evaluation/eval_results/rag_eval_v6.jsonl"
 
 MAX_WORKERS = 1
 TIMEOUT = 180
+
+TIME_SLEEP=8000

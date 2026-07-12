@@ -23,5 +23,6 @@ def main(rag_results, file_path):
 if __name__=="__main__":
 
     print("Starting evaluation...")
+    time.sleep(TIME_SLEEP)
     main(RAG_GENERATION_OUTPUT_PATH, RAG_EVALUATION_OUTPUT_PATH)
     print("Evaluation completed.")      
