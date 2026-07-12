@@ -6,9 +6,8 @@ import random
 import pandas as pd
 from dotenv import load_dotenv
 load_dotenv()
-
 from src.eval import prepare_testset_documents
-
+from src.eval_config import *
 from rag_pipeline.query_engine import vectorstore
 
 def create_document_vectorstore(docs):
@@ -33,7 +32,7 @@ def create_csv_vectorstore(docs):
 
 
 def main():
-    docs = prepare_testset_documents("evaluation/eval_data")
+    docs = prepare_testset_documents(TEST_DATA_PATH, CHUNK_SIZE, OVERLAP)
     print(f"Successfully prepared {len(docs)} documents.")
 
     create_document_vectorstore(docs)

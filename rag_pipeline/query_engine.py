@@ -1,17 +1,14 @@
-import os
-import re
-from tika import parser
-import warnings
-from rag_pipeline.utils import parse, supported_file_types, get_file_extension
-from langchain_groq import ChatGroq
-from langchain_classic.chains import RetrievalQA
+from langchain.chains import RetrievalQA
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 from langchain_core.prompts import PromptTemplate
+from langchain.retrievers import ContextualCompressionRetriever
 from rag_pipeline.vector_store import get_vector_store
-warnings.filterwarnings("ignore")
+from rag_pipeline.config import *
+from rag_pipeline.models import get_llm, get_reranker
+from rag_pipeline.utils import parse, supported_file_types, get_file_extension
 
-llm = ChatGroq(model="openai/gpt-oss-120b", temperature=0, groq_api_key=os.getenv("GROQ_API_KEY"))
+llm = get_llm()
 
 def is_supported_file(file):
     """
@@ -26,14 +23,9 @@ def is_supported_file(file):
 
     return get_file_extension(file) in supported_file_types()
 
-def load_data(file_path, session_id, file_name, chunk_size=1000, chunk_overlap=50):
+def load_data(file_path, session_id, file_name, chunk_size=CHUNK_SIZE, chunk_overlap=OVERLAP):
     """
     Loads a file, extracts text, and splits it into chunks for indexing.
-
-    Steps:
-        1. Parses raw file content
-        2. Wraps content into a LangChain Document with metadata
-        3. Splits document into overlapping chunks for retrieval
 
     Args:
         file_path (str): Path to input file.
@@ -64,7 +56,7 @@ def load_data(file_path, session_id, file_name, chunk_size=1000, chunk_overlap=5
     chunks = text_splitter.split_documents([doc])
     return chunks
 
-def vectorstore(documents=None, batch_size=1000):
+def vectorstore(documents=None, batch_size=BATCH_SIZE):
     """
     Creates or loads a vector store for retrieval.
 
@@ -81,13 +73,11 @@ def vectorstore(documents=None, batch_size=1000):
         return get_vector_store()
 
 
-def ask_question(question, vectorstore, session_id, return_metadata=False, k=4, search_type="similarity"):
+def ask_question(question, vectorstore, session_id, return_metadata=RETURN_METADATA, 
+                    k=RETRIEVAL_K, search_type=SEARCH_TYPE, top_n=RERANK_TOP_N):
     """
-    Runs a Retrieval-Augmented Generation (RAG) pipeline for a query.
-
-    Retrieves relevant documents filtered by session_id and generates
-    a response using an LLM. Optionally returns the complete retrieval
-    output for evaluation purposes.
+    Runs a RAG pipeline to retrieve session-filtered documents and generate an LLM response, 
+    optionally returning retrieval details for evaluation.
 
     Args:
         question (str): Input query.
@@ -96,6 +86,7 @@ def ask_question(question, vectorstore, session_id, return_metadata=False, k=4, 
         return_metadata (bool, optional): Return full pipeline output instead of only the answer. Defaults to False.
         k (int, optional): Number of documents to retrieve. Defaults to 4.
         search_type (str, optional): Retrieval strategy (e.g., "similarity", "mmr"). Defaults to "similarity".
+        top_n (int, optional): Number of top documents to return after reranking. Defaults to 5.
 
     Returns:
         str | dict:
@@ -128,9 +119,16 @@ def ask_question(question, vectorstore, session_id, return_metadata=False, k=4, 
         input_variables=["context", "question"]
         )
 
+    compressor = get_reranker(top_n=top_n)
+
+    compression_retriever = ContextualCompressionRetriever(
+                                base_retriever=retriever,
+                                base_compressor=compressor,
+                                )
+
     pipeline = RetrievalQA.from_chain_type(
                 llm=llm,
-                retriever=retriever,
+                retriever=compression_retriever,
                 return_source_documents=True,
                 chain_type_kwargs={"prompt": PROMPT}
                 )

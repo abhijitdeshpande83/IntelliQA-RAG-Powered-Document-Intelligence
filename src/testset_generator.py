@@ -1,38 +1,23 @@
 # imports for synthetic QA Dataset Generation
-from ragas import RunConfig
-from ragas.llms import LangchainLLMWrapper
-from ragas.embeddings import LangchainEmbeddingsWrapper
-from langchain_ollama import ChatOllama                     # ollama can run locally
-from langchain_huggingface import HuggingFaceEmbeddings
-from src.eval import prepare_testset_documents, generate_qa_dataset, save_checkpoints, load_processed_inputs
 from collections import defaultdict
+from src.eval_models import *
+from src.eval_config import *
 import random
-import pandas as pd
+from src.eval import (prepare_testset_documents, 
+                        generate_qa_dataset, 
+                        save_checkpoints, 
+                        load_processed_inputs
+                        )
 
-generator_llm = LangchainLLMWrapper(
-                ChatOllama(
-                    model="qwen2.5",
-                    temperature=0,
-                    # model_kwargs={"response_format":{"type":"json_object"}}
-                    format="json"
-                    )
-                )
-
-generator_embeddings = LangchainEmbeddingsWrapper(
-                HuggingFaceEmbeddings(
-                    model_name="BAAI/bge-large-en-v1.5",
-                    model_kwargs={'device': 'cpu'},
-                    encode_kwargs={'normalize_embeddings': True, 'batch_size': 32}
-                    )
-                )    
-
-run_config = RunConfig(max_workers=2, timeout=180)   
+generator_llm = get_generator_llm()
+generator_embeddings = get_eval_embeddings()
+run_config = get_run_config()
 
 
 def create_doc_set():
 
     print("Preparing testset documents...")
-    docs = prepare_testset_documents("evaluation/eval_data", chunk_size=1000, chunk_overlap=150)
+    docs = prepare_testset_documents(TEST_DATA_PATH, CHUNK_SIZE, chunk_overlap=150)
 
     group_docs = defaultdict(list)
     
@@ -64,7 +49,7 @@ def define_testset_size(chunks):
 
 def create_test_set(docs, file_path):
 
-    processed_files = set(pd.read_json(file_path, lines=True)['filename'])
+    processed_files = load_processed_inputs(file_path, "filename")
 
     for file, chunks in docs.items():
         if file in processed_files:
