@@ -1,0 +1,14 @@
+LLM_MODEL = "openai/gpt-oss-120b"
+EMBEDDING_MODEL = "BAAI/bge-large-en-v1.5"
+RERANKER_MODEL = "BAAI/bge-reranker-base"
+
+TEMPERATURE = 0
+CHUNK_SIZE = 1000
+OVERLAP = 50
+BATCH_SIZE = 1000
+RETRIEVAL_K = 20
+RERANK_TOP_N = 8
+SEARCH_TYPE = "similarity"
+RETURN_METADATA = False
+
+COLLECTION_NAME = "document_embeddings"

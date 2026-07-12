@@ -18,9 +18,6 @@ def prepare_testset_documents(eval_data_path, chunk_size=1000, chunk_overlap=50)
     """
     Loads and prepares documents from a directory for synthetic QA generation.
 
-    Traverses all files in the given path, filters supported file types,
-    and loads them into LangChain-compatible document objects.
-
     Args:
         eval_data_path (str): Path to directory containing source documents.
         chunk_size (int, optional): Size of each text chunk. Defaults to 1000.
@@ -49,9 +46,6 @@ def generate_qa_dataset(docs, generator_llm, generator_embeddings, run_config, t
     """
     Generates a synthetic QA dataset for RAG evaluation using Ragas.
 
-    Creates question–answer pairs from input documents using an LLM
-    and embedding model to simulate realistic evaluation queries.
-
     Args:
         docs (list): Source documents for synthetic data generation.
         generator_llm: LLM used to generate questions and answers.
@@ -70,12 +64,9 @@ def generate_qa_dataset(docs, generator_llm, generator_embeddings, run_config, t
 
     return generator.generate_with_langchain_docs(docs, testset_size=test_size, run_config=run_config)
 
-def get_rag_response(question: str, vectorstore_db, session_id: str, k:int, search_type:str):
+def get_rag_response(question: str, vectorstore_db, session_id: str, k:int, search_type:str, top_n:int):
     """
     Executes the RAG pipeline for a single query.
-
-    Retrieves relevant context from the vector store and generates an
-    LLM-based response.
 
     Args:
         question (str): User query.
@@ -83,13 +74,14 @@ def get_rag_response(question: str, vectorstore_db, session_id: str, k:int, sear
         session_id: Session identifier for tracing.
         k (int): Number of documents to retrieve.
         search_type (str): Retrieval strategy.
+        top_n (int): Number of top documents to return after reranking.
 
     Returns:
         dict: Contains generated answer and retrieved contexts.
     """
 
     response = ask_question(question, vectorstore_db, session_id, return_metadata=True,
-                             k=k, search_type=search_type)
+                             k=k, search_type=search_type, top_n=top_n)
     
     answer = response['result']
     contexts = [doc.page_content for doc in response['source_documents']]
@@ -99,9 +91,6 @@ def get_rag_response(question: str, vectorstore_db, session_id: str, k:int, sear
 def save_checkpoints(data, file_path):
     """
     Appends records to a JSONL checkpoint file.
-
-    Supports dict, pandas DataFrame, and objects with `to_pandas()` (e.g., RAGAS outputs).
-    All inputs are normalized to a list of dictionaries and written as JSONL lines.
 
     Args:
         data (dict | pd.DataFrame | object): Input record(s) to save.
@@ -135,13 +124,9 @@ def load_processed_inputs(file_path):
                     print(f"Skipping invalid JSON line in {file_path}")
         return processed_inputs
 
-def generate_rag_responses(df, vectorstore_db, session_id, k=4, search_type="similarity",
-                           checkpoint_file="evaluation/rag_results/rag_results.jsonl"):
+def generate_rag_responses(df, vectorstore_db, session_id, k, search_type, top_n, file_path):
     """
     Runs a RAG pipeline over an input dataset and stores outputs incrementally as JSONL.
-
-    For each input question, retrieves relevant context, generates an answer,
-    and saves results as checkpointed JSONL records for recovery and resumption.
 
     Args:
         df (pd.DataFrame): Input dataset with user queries and references.
@@ -150,12 +135,13 @@ def generate_rag_responses(df, vectorstore_db, session_id, k=4, search_type="sim
         k (int, optional): Number of retrieved documents. Defaults to 4.
         search_type (str, optional): Retrieval strategy (e.g., "similarity", "mmr").
             Defaults to "similarity".
-        checkpoint_file (str): Path to JSONL file for incremental saving.
+        top_n (int, optional): Number of top documents to return after reranking. Defaults to 5.
+        file_path (str): Path to JSONL file for incremental saving.
 
     Returns:
         None
     """    
-    processed_inputs = load_processed_inputs(checkpoint_file)
+    processed_inputs = load_processed_inputs(file_path)
 
     for i, row in enumerate(df.itertuples(index=False), start=1):
         try:
@@ -167,6 +153,7 @@ def generate_rag_responses(df, vectorstore_db, session_id, k=4, search_type="sim
                 session_id,
                 k=k,
                 search_type=search_type,
+                top_n=top_n
             )
 
             result = {
@@ -176,7 +163,7 @@ def generate_rag_responses(df, vectorstore_db, session_id, k=4, search_type="sim
                 "reference": row.reference
             }
 
-            save_checkpoints(result, checkpoint_file)
+            save_checkpoints(result, file_path)
             processed_inputs.add(row.user_input)
             print(f"Row {i} processed and saved.")
 

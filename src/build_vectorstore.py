@@ -6,9 +6,7 @@ import random
 import pandas as pd
 from dotenv import load_dotenv
 load_dotenv()
-
 from src.eval import prepare_testset_documents
-
 from rag_pipeline.query_engine import vectorstore
 
 def create_document_vectorstore(docs):
