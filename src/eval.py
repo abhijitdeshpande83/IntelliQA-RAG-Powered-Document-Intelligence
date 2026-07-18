@@ -1,5 +1,4 @@
 import os
-from os import path
 import pandas as pd
 import re
 import json
@@ -64,7 +63,7 @@ def generate_qa_dataset(docs, generator_llm, generator_embeddings, run_config, t
 
     return generator.generate_with_langchain_docs(docs, testset_size=test_size, run_config=run_config)
 
-def get_rag_response(question: str, vectorstore_db, session_id: str, k:int, search_type:str, top_n:int):
+def get_rag_response(question: str, vectorstore_db, session_id, config:RetrievalConfig):
     """
     Executes the RAG pipeline for a single query.
 
@@ -72,16 +71,13 @@ def get_rag_response(question: str, vectorstore_db, session_id: str, k:int, sear
         question (str): User query.
         vectorstore_db: Vector database for retrieval.
         session_id: Session identifier for tracing.
-        k (int): Number of documents to retrieve.
-        search_type (str): Retrieval strategy.
-        top_n (int): Number of top documents to return after reranking.
+        config (RetrievalConfig): Retrieval and search configuration.
 
     Returns:
         dict: Contains generated answer and retrieved contexts.
     """
 
-    response = ask_question(question, vectorstore_db, session_id, return_metadata=True,
-                             k=k, search_type=search_type, top_n=top_n)
+    response = ask_question(question, vectorstore_db, session_id, config, return_metadata=True)
     
     answer = response['result']
     contexts = [doc.page_content for doc in response['source_documents']]
@@ -124,7 +120,7 @@ def load_processed_inputs(file_path, input_field):
                     print(f"Skipping invalid JSON line in {file_path}")
         return processed_inputs
 
-def generate_rag_responses(df, vectorstore_db, session_id, k, search_type, top_n, file_path):
+def generate_rag_responses(df, vectorstore_db, session_id, file_path, config):
     """
     Runs a RAG pipeline over an input dataset and stores outputs incrementally as JSONL.
 
@@ -141,9 +137,7 @@ def generate_rag_responses(df, vectorstore_db, session_id, k, search_type, top_n
                 row.user_input,
                 vectorstore_db,
                 session_id,
-                k=k,
-                search_type=search_type,
-                top_n=top_n
+                config=config
             )
 
             result = {

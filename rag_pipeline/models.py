@@ -7,10 +7,18 @@ from langchain.retrievers.document_compressors import CrossEncoderReranker
 from langchain_community.cross_encoders import HuggingFaceCrossEncoder
 from langchain_huggingface import HuggingFaceEmbeddings
 from rag_pipeline.config import *
+from psycopg_pool import ConnectionPool
 load_dotenv()
 
 @lru_cache(maxsize=1)
-def get_pgvectore():
+def get_pool_connection():
+    """
+    Creates and returns a PostgreSQL connection pool.
+    """
+    return ConnectionPool(os.getenv("DATABASE_URL"), min_size=1, max_size=10)
+
+@lru_cache(maxsize=1)
+def get_pgvectore_connection():
     """
     Initializes and returns a cached instance of the PGVector store.
 

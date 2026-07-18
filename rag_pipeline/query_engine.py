@@ -2,11 +2,11 @@ from langchain.chains import RetrievalQA
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 from langchain_core.prompts import PromptTemplate
-from langchain.retrievers import ContextualCompressionRetriever
 from rag_pipeline.vector_store import get_vector_store
 from rag_pipeline.config import *
 from rag_pipeline.models import get_llm, get_reranker
-from rag_pipeline.utils import parse, supported_file_types, get_file_extension
+from rag_pipeline.retrievers import get_retriever
+from rag_pipeline.utils import parse, get_file_extension, SUPPORTED_FORMATS, split_tabular, split_document
 
 llm = get_llm()
 
@@ -21,7 +21,7 @@ def is_supported_file(file):
         bool: True if file extension is supported, else False.
     """
 
-    return get_file_extension(file) in supported_file_types()
+    return get_file_extension(file) in SUPPORTED_FORMATS
 
 def load_data(file_path, session_id, file_name, chunk_size=CHUNK_SIZE, chunk_overlap=OVERLAP):
     """
@@ -38,22 +38,17 @@ def load_data(file_path, session_id, file_name, chunk_size=CHUNK_SIZE, chunk_ove
         list[Document]: Chunked documents ready for embedding/storage.
     """
 
-    text = parse(file_path)
+    extension = get_file_extension(file_path)
 
-    doc = Document(
-            page_content=text, 
-            metadata={
-                "session_id": session_id,
-                "filename": file_name
-                }
-            )
-    
-    text_splitter = RecursiveCharacterTextSplitter(
-                    chunk_size=chunk_size, 
-                    chunk_overlap=chunk_overlap
-                    )
-    
-    chunks = text_splitter.split_documents([doc])
+    if SUPPORTED_FORMATS.get(extension)=='tabular':
+        chunks = split_tabular(file_path, extension, chunk_size, chunk_overlap)
+    else:
+        text = parse(file_path)
+        chunks = split_document(text, extension, chunk_size, chunk_overlap)
+
+    for c in chunks:
+        c.metadata.update({"session_id":session_id, "filename":file_name})
+
     return chunks
 
 def vectorstore(documents=None, batch_size=BATCH_SIZE):
@@ -72,35 +67,22 @@ def vectorstore(documents=None, batch_size=BATCH_SIZE):
     else:
         return get_vector_store()
 
-
-def ask_question(question, vectorstore, session_id, return_metadata=RETURN_METADATA, 
-                    k=RETRIEVAL_K, search_type=SEARCH_TYPE, top_n=RERANK_TOP_N):
+def ask_question(question, vectorstore, session_id, config:RetrievalConfig, return_metadata=RETURN_METADATA):
     """
-    Runs a RAG pipeline to retrieve session-filtered documents and generate an LLM response, 
-    optionally returning retrieval details for evaluation.
+    Runs the RAG pipeline to retrieve relevant session documents and generate an answer.
 
     Args:
-        question (str): Input query.
-        vectorstore: Vector database for retrieval.
-        session_id (str): Session filter for retrieval.
-        return_metadata (bool, optional): Return full pipeline output instead of only the answer. Defaults to False.
-        k (int, optional): Number of documents to retrieve. Defaults to 4.
-        search_type (str, optional): Retrieval strategy (e.g., "similarity", "mmr"). Defaults to "similarity".
-        top_n (int, optional): Number of top documents to return after reranking. Defaults to 5.
+        question (str): User query.
+        vectorstore: Vector database instance.
+        session_id (str): Session identifier for document filtering.
+        config (RetrievalConfig): Retrieval and search configuration.
+        return_metadata (bool, optional): Returns full response with sources when True. Defaults to False.
 
     Returns:
-        str | dict:
-            - If return_metadata=False, returns the generated answer.
-            - If return_metadata=True, returns the complete RetrievalQA response.
+        str | dict: Generated answer or full pipeline response with metadata.
     """
+    retriever = get_retriever(vectorstore, session_id, config)
 
-    retriever = vectorstore.as_retriever(
-                    search_type= search_type,
-                    search_kwargs={
-                        "filter": {"session_id": session_id},
-                        "k": k
-                        }
-                    )
     prompt_template = """You are a helpful assistant answering questions based on the provided context.
 
     Use the information in the context below to answer the question. The context may contain the answer directly or in pieces you need to connect. Read it carefully and use any relevant information you find, even if it is partial or phrased differently from the question.
@@ -119,16 +101,9 @@ def ask_question(question, vectorstore, session_id, return_metadata=RETURN_METAD
         input_variables=["context", "question"]
         )
 
-    compressor = get_reranker(top_n=top_n)
-
-    compression_retriever = ContextualCompressionRetriever(
-                                base_retriever=retriever,
-                                base_compressor=compressor,
-                                )
-
     pipeline = RetrievalQA.from_chain_type(
                 llm=llm,
-                retriever=compression_retriever,
+                retriever=retriever,
                 return_source_documents=True,
                 chain_type_kwargs={"prompt": PROMPT}
                 )

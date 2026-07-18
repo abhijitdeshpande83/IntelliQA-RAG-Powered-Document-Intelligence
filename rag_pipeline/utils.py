@@ -1,28 +1,31 @@
 import os
 import re
+import json
+import openpyxl
+import pandas as pd
 from tika import tika
+from typing import List
+from tika import parser
+from langchain_core.documents import Document
+from langchain_text_splitters import (
+        RecursiveCharacterTextSplitter,
+        MarkdownHeaderTextSplitter,
+        HTMLHeaderTextSplitter,
+        RecursiveJsonSplitter,
+        Language,
+        )
+from langchain_community.document_loaders import CSVLoader, UnstructuredExcelLoader
+from rag_pipeline.config import MAX_TABULAR_ROWS
 
 # Point tika client to remote server 
 tika.TikaClientOnly = True
 tika.TikaServerEndpoint = "http://tika:9998"
 
-from tika import parser
-
-def supported_file_types():
-       
-    return {
-            '.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx', 
-            '.txt', '.md', '.py', '.ipynb', '.json', '.yaml', '.yml', 
-            '.toml', '.csv', '.html', '.xml'
-            }
-    
 def get_file_extension(file_name):
 
     _, ext = os.path.splitext(file_name)
 
     return ext
-
-import re
 
 def clean_file(text):
     """
@@ -39,6 +42,7 @@ def clean_file(text):
     text = re.sub(r'\.{2,}', '', text)                      # Remove blocks of continuous dots
     text = re.sub(r'(\.\s){2,}', '', text)                  # Remove spaced dots like ". . . ."
     text = re.sub(r'_{2,}', '', text)                       # Remove continuous underscores
+    text = re.sub(r'(?<![.!?:])\n(?![\n•\-\*\d])', ' ', text)
 
     # 2. STRIP CLEAN EXTRA WHITESPACE
     text = re.sub(r'[ \t]+', ' ', text)                     # remove excessive spaces/tabs
@@ -61,16 +65,138 @@ def parse(file):
         str: Extracted and cleaned text content.
     """
 
-    tika_files = {'.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx', '.html', '.xml'}
-    text_files = {'.txt', '.md', '.py', '.ipynb', '.json', '.yaml', '.yml', '.toml', '.csv', }
+    tika_files = {'.pdf', '.doc', '.docx', '.ppt', '.pptx'}
+    html_files = {'.html', '.htm', '.xml', '.md',}
+    text_files = {'.txt', '.py', '.ipynb', '.json', '.yaml', '.yml', '.toml'}
 
-    if get_file_extension(file) in tika_files:
+    ext = get_file_extension(file)
+
+    if ext in tika_files:
         context = parser.from_file(file)
         # print(f"Successfully parsed {os.path.basename(file)}")
         return clean_file(context['content'].strip())
+    
+    if ext in html_files:
+          with open(file,'r', encoding='utf-8') as f:
+                return f.read()
 
-    if get_file_extension(file) in text_files:
-        with open(file,'r', encoding='utf-8') as r:
-            data = r.read()
+    if ext in text_files:
+        with open(file,'r', encoding='utf-8') as f:
+            data = f.read()
         # print(f"Successfully parsed {os.path.basename(file)}")
         return clean_file(data)
+
+SUPPORTED_FORMATS = {
+    # tabular — loader-level, no character splitting
+    '.csv':   'tabular',
+    '.xls':   'tabular',
+    '.xlsx':  'tabular',
+    # structured text — split on headers/structure
+    '.md':    'markdown',
+    '.html':  'html',
+    '.htm':   'html',
+    '.xml':   'html',
+    # code
+    '.py':    'python',
+    '.ipynb': 'notebook',
+    # config/data
+    '.json': 'json',
+    '.yaml':  'json',
+    '.yml':   'json',
+    '.toml':  'json',
+    # prose — recursive is genuinely the right default
+    '.pdf':   'recursive',
+    '.doc':   'recursive',
+    '.docx':  'recursive',
+    '.ppt':   'recursive',
+    '.pptx':  'recursive',
+    '.txt':   'recursive',
+}
+
+def _split_markdown(text, chunk_size, chunk_overlap):
+    splitter = MarkdownHeaderTextSplitter(
+        headers_to_split_on=[("#","h1"),("##","h2"),("###","h3")]).split_text(text)
+    for s in splitter:
+        s.page_content = clean_file(s.page_content)
+    return RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size, chunk_overlap=chunk_overlap
+        ).split_documents(splitter)
+
+def _split_html(text,chunk_size, chunk_overlap):
+    splitter = HTMLHeaderTextSplitter(
+        headers_to_split_on=[("h1", "h1"), ("h2", "h2"), ("h3", "h3")]
+        ).split_text(text)
+    for s in splitter:
+        s.page_content = clean_file(s.page_content)
+    return RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size, chunk_overlap=chunk_overlap
+        ).split_documents(splitter)
+
+def _split_python(text, chunk_size, chunk_overlap):
+    splitter = RecursiveCharacterTextSplitter.from_language(
+        language=Language.PYTHON, chunk_size=chunk_size, chunk_overlap=chunk_overlap
+        )
+    return splitter.split_documents([Document(page_content=text)])
+
+def _split_json(text, chunk_size, chunk_overlap):
+    return RecursiveJsonSplitter(max_chunk_size=chunk_size).create_documents(
+        texts=[json.loads(text)]
+    )
+
+def _split_notebook(text, chunk_size, chunk_overlap):
+    nb = json.loads(text)
+    code = "\n\n".join("".join(c["source"]) for c in nb["cells"])
+    return _split_python(code, chunk_size, chunk_overlap)
+
+
+def _split_recursive(text, chunk_size, chunk_overlap):
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size, chunk_overlap=chunk_overlap
+    )
+    return splitter.split_documents([Document(page_content=text)])
+
+SPLITTERS = {
+    'markdown':  _split_markdown,
+    'html':      _split_html,
+    'python':    _split_python,
+    'json':      _split_json,
+    'notebook':  _split_notebook,
+    'recursive': _split_recursive,
+}
+
+def split_document(text:str, extention:str, 
+                   chunk_size: int, chunk_overlap: int) -> List[Document]:
+    """Split parsed text into Documents using the strategy suited to the format."""
+    strategy = SUPPORTED_FORMATS.get(extention, "recursive")
+    handler = SPLITTERS[strategy]
+    return handler(text, chunk_size, chunk_overlap)
+
+def split_tabular(file_path, extension, chunk_size, chunk_overlap):
+    if extension == '.csv':
+        docs = CSVLoader(file_path).load()
+    else:
+        wb = openpyxl.load_workbook(file_path, read_only=True)
+        n_rows = wb.active.max_row
+        wb.close()
+
+        if n_rows > MAX_TABULAR_ROWS:
+            raise ValueError(f"Tabular file too large: {n_rows} rows (limit {MAX_TABULAR_ROWS})")
+
+        df = pd.read_excel(file_path)
+        docs = [
+            Document(
+                page_content="\n".join(f"{col}: {row[col]}" for col in df.columns),
+                metadata={"row": i},
+            )
+            for i, row in df.iterrows()
+        ]
+
+    if len(docs) > MAX_TABULAR_ROWS:
+        raise ValueError(f"Tabular file too large: {len(docs)} rows (limit {MAX_TABULAR_ROWS})")
+
+    # backstop: catches rows with very long text cells
+    return RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size, chunk_overlap=chunk_overlap
+    ).split_documents(docs)
+
+    
