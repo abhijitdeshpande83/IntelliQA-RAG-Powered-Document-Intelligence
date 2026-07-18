@@ -7,6 +7,7 @@ langchain-huggingface==0.3.1
 langchain-postgres==0.0.17
 langchain-ollama==0.2.3
 langchain-google-genai==2.0.10
+msoffcrypto-tool==6.0.0
 psycopg2-binary==2.9.11
 ragas==0.2.15
 groq
@@ -18,3 +19,4 @@ psycopg[binary,pool]
 asyncpg
 datasets
 python-dotenv
+unstructured==0.24.1
