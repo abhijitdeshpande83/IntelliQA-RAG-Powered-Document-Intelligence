@@ -1,12 +1,10 @@
 from langchain.chains import RetrievalQA
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_core.documents import Document
 from langchain_core.prompts import PromptTemplate
 from rag_pipeline.vector_store import get_vector_store
-from rag_pipeline.config import *
-from rag_pipeline.models import get_llm, get_reranker
+from rag_pipeline.config import RetrievalConfig, RETURN_METADATA
+from rag_pipeline.models import get_llm
 from rag_pipeline.retrievers import get_retriever
-from rag_pipeline.utils import parse, get_file_extension, SUPPORTED_FORMATS, split_tabular, split_document
+from rag_pipeline.utils import parse, get_file_extension, SUPPORTED_FORMATS, split_document
 
 llm = get_llm()
 
@@ -23,7 +21,7 @@ def is_supported_file(file):
 
     return get_file_extension(file) in SUPPORTED_FORMATS
 
-def load_data(file_path, session_id, file_name, chunk_size=CHUNK_SIZE, chunk_overlap=OVERLAP):
+def load_data(file_path, session_id, file_name, chunk_size, chunk_overlap):
     """
     Loads a file, extracts text, and splits it into chunks for indexing.
 
@@ -40,18 +38,15 @@ def load_data(file_path, session_id, file_name, chunk_size=CHUNK_SIZE, chunk_ove
 
     extension = get_file_extension(file_path)
 
-    if SUPPORTED_FORMATS.get(extension)=='tabular':
-        chunks = split_tabular(file_path, extension, chunk_size, chunk_overlap)
-    else:
-        text = parse(file_path)
-        chunks = split_document(text, extension, chunk_size, chunk_overlap)
+    text = parse(file_path)
+    chunks = split_document(text, extension, chunk_size, chunk_overlap)
 
     for c in chunks:
         c.metadata.update({"session_id":session_id, "filename":file_name})
 
     return chunks
 
-def vectorstore(documents=None, batch_size=BATCH_SIZE):
+def vectorstore(documents, batch_size):
     """
     Creates or loads a vector store for retrieval.
 
