@@ -1,7 +1,7 @@
 # imports for synthetic QA Dataset Generation
 from collections import defaultdict
 from src.eval_models import *
-from src.eval_config import *
+from src.eval_config import TEST_DATA_PATH, CHUNK_SIZE, OVERLAP
 import random
 from src.eval import (prepare_testset_documents, 
                         generate_qa_dataset, 
@@ -17,7 +17,7 @@ run_config = get_run_config()
 def create_doc_set():
 
     print("Preparing testset documents...")
-    docs = prepare_testset_documents(TEST_DATA_PATH, CHUNK_SIZE, chunk_overlap=150)
+    docs = prepare_testset_documents(TEST_DATA_PATH, CHUNK_SIZE, OVERLAP)
 
     group_docs = defaultdict(list)
     

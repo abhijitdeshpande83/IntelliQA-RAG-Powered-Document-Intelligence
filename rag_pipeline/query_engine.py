@@ -46,7 +46,7 @@ def load_data(file_path, session_id, file_name, chunk_size, chunk_overlap):
 
     return chunks
 
-def vectorstore(documents, batch_size):
+def vectorstore(documents=None, batch_size=250):
     """
     Creates or loads a vector store for retrieval.
 
@@ -57,10 +57,8 @@ def vectorstore(documents, batch_size):
         VectorStore: Initialized or loaded vector database.
     """
 
-    if documents:
-        return get_vector_store(documents=documents, batch_size=batch_size)
-    else:
-        return get_vector_store()
+    return get_vector_store(documents=documents, batch_size=batch_size)
+
 
 def ask_question(question, vectorstore, session_id, config:RetrievalConfig, return_metadata=RETURN_METADATA):
     """

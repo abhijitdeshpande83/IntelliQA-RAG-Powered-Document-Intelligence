@@ -1,6 +1,6 @@
 from rag_pipeline.models import get_pgvectore_connection
 
-def get_vector_store(documents, batch_size):
+def get_vector_store(documents=None, batch_size=250):
     """
     Initializes the PGVector store and adds documents if provided.
     """
