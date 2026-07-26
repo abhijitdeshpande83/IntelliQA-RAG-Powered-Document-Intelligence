@@ -4,7 +4,7 @@ from ragas import RunConfig
 from ragas.llms import LangchainLLMWrapper
 from ragas.embeddings import LangchainEmbeddingsWrapper
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_ollama import ChatOllama 
+from langchain_groq import ChatGroq
 from langchain_google_genai import ChatGoogleGenerativeAI
 from src.eval_config import *
 from ragas.metrics import (
@@ -25,11 +25,10 @@ def get_generator_llm():
 
     """
     return LangchainLLMWrapper(
-                ChatOllama(
+                ChatGroq(
                     model=LLM_GENERATOR,
                     temperature=TEMPERATURE,
-                    # model_kwargs={"response_format":{"type":"json_object"}}
-                    format="json"
+                    model_kwargs={"response_format": {"type": "json_object"}},
                     )
                 )
 

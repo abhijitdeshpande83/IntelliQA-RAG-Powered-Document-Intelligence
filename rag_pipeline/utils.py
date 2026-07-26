@@ -1,8 +1,6 @@
 import os
 import re
 import json
-import openpyxl
-import pandas as pd
 from tika import tika
 from typing import List
 from tika import parser
@@ -14,8 +12,6 @@ from langchain_text_splitters import (
         RecursiveJsonSplitter,
         Language,
         )
-from langchain_community.document_loaders import CSVLoader, UnstructuredExcelLoader
-from rag_pipeline.config import MAX_TABULAR_ROWS
 
 # Point tika client to remote server 
 tika.TikaClientOnly = True
@@ -87,10 +83,6 @@ def parse(file):
         return clean_file(data)
 
 SUPPORTED_FORMATS = {
-    # tabular — loader-level, no character splitting
-    '.csv':   'tabular',
-    '.xls':   'tabular',
-    '.xlsx':  'tabular',
     # structured text — split on headers/structure
     '.md':    'markdown',
     '.html':  'html',
@@ -170,33 +162,3 @@ def split_document(text:str, extention:str,
     strategy = SUPPORTED_FORMATS.get(extention, "recursive")
     handler = SPLITTERS[strategy]
     return handler(text, chunk_size, chunk_overlap)
-
-def split_tabular(file_path, extension, chunk_size, chunk_overlap):
-    if extension == '.csv':
-        docs = CSVLoader(file_path).load()
-    else:
-        wb = openpyxl.load_workbook(file_path, read_only=True)
-        n_rows = wb.active.max_row
-        wb.close()
-
-        if n_rows > MAX_TABULAR_ROWS:
-            raise ValueError(f"Tabular file too large: {n_rows} rows (limit {MAX_TABULAR_ROWS})")
-
-        df = pd.read_excel(file_path)
-        docs = [
-            Document(
-                page_content="\n".join(f"{col}: {row[col]}" for col in df.columns),
-                metadata={"row": i},
-            )
-            for i, row in df.iterrows()
-        ]
-
-    if len(docs) > MAX_TABULAR_ROWS:
-        raise ValueError(f"Tabular file too large: {len(docs)} rows (limit {MAX_TABULAR_ROWS})")
-
-    # backstop: catches rows with very long text cells
-    return RecursiveCharacterTextSplitter(
-        chunk_size=chunk_size, chunk_overlap=chunk_overlap
-    ).split_documents(docs)
-
-    

@@ -1,12 +1,12 @@
 from dataclasses import dataclass
 
 LLM_JUDGE = "gemini-flash-lite-latest"
-LLM_GENERATOR = "qwen2.5"
+LLM_GENERATOR = "openai/gpt-oss-120b"
 EMBEDDING_MODEL = "BAAI/bge-large-en-v1.5"
 
 TEMPERATURE = 0
-CHUNK_SIZE = 1000
-OVERLAP = 50
+CHUNK_SIZE = 1024
+OVERLAP = 256
 BATCH_SIZE = 250
 RETRIEVAL_K = 20
 RERANK_TOP_N = 8
@@ -34,10 +34,10 @@ class RetrievalConfig:
 TEST_DATA_PATH = "evaluation/eval_data"
 QA_TESTSET_PATH = "evaluation/testset/new_testset_rewritten.jsonl"
 
-RAG_GENERATION_OUTPUT_PATH = "evaluation/rag_results/rag_results_v10.jsonl"
-RAG_EVALUATION_OUTPUT_PATH = "evaluation/eval_results/rag_eval_v10.jsonl"
+RAG_GENERATION_OUTPUT_PATH = "evaluation/rag_results/rag_results_v12.jsonl"
+RAG_EVALUATION_OUTPUT_PATH = "evaluation/eval_results/rag_eval_v12.jsonl"
 
 MAX_WORKERS = 1
 TIMEOUT = 180
 
-TIME_SLEEP=14400
+TIME_SLEEP=0

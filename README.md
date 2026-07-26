@@ -105,6 +105,8 @@ With a test set that could be trusted, one variable was changed at a time.
 | `k=20` + rerank top-5 | **0.412** | 0.539 | 0.725 | 0.775 |
 | `k=20` + rerank top-8 | 0.410 | 0.629 | 0.729 | 0.759 |
 
+*Scores are averaged over 50 evaluation questions on the rebuilt index with `hnsw.ef_search = 200`.*
+
 **What this shows:**
 
 - **Recall climbs with `k` while precision stays flat (~0.35).** Retrieval finds the answer-bearing chunks when given room, but cannot rank them to the top. Flat precision across a 5x change in `k` is both the textbook signal for a reranker and a property of the metric: context precision is an order-aware, Average-Precision-style score normalized by the number of relevant chunks rather than by `k`, so it measures ranking quality, not retrieval depth.
@@ -149,11 +151,11 @@ answer = ask_question("What was the reported revenue?", store, session_id="abc12
 
 The package exposes:
 
-- `rag_pipeline.config` - model names and tuning defaults (`k`, `top_n`, chunk size)
-- `rag_pipeline.utils` - parsing, format-aware chunking, deduplication
-- `rag_pipeline.vector_store` - PGVector setup and indexing
-- `rag_pipeline.retrievers` - dense, full-text, hybrid, and reranking retrievers
-- `rag_pipeline.query_engine` - retrieval orchestration, prompt assembly, generation
+- `rag_pipeline.config`: model names and tuning defaults (`k`, `top_n`, chunk size)
+- `rag_pipeline.utils`: parsing, format-aware chunking, deduplication
+- `rag_pipeline.vector_store`: PGVector setup and indexing
+- `rag_pipeline.retrievers`: dense, full-text, hybrid, and reranking retrievers
+- `rag_pipeline.query_engine`: retrieval orchestration, prompt assembly, generation
 
 See `IntelliQA.ipynb` for end-to-end examples.
 
@@ -176,37 +178,34 @@ jupyter notebook IntelliQA.ipynb
 
 ### Database indexes (required after first ingestion)
 
-PGVector creates the tables on first insert but does not create indexes. After
-loading data, create them once so retrieval is fast and hybrid search works. See
-`migrations/INDEX_SETUP.md` for the full script. In short:
+PGVector creates the tables on first insert but does not create indexes. After loading data, create them once so retrieval is fast and hybrid search works. Full setup, including the exact SQL, is documented in [issue #19](https://github.com/abhijitdeshpande83/IntelliQA-RAG-Powered-Document-Intelligence/issues/19). In short:
 
-- **HNSW index on the embedding column** using `vector_cosine_ops` (cosine
-  distance, matching the normalized `bge-large` embeddings). Without it, every
-  query scans the whole table.
-- **`hnsw.ef_search` must be raised from its default of 40.** HNSW is an
-  approximate index, and the default explores too little of the graph for
-  `k=20`, which measurably lowers recall versus exact search. It is set at the
-  role or database level (`ALTER ROLE ... SET hnsw.ef_search = 200`) so every
-  connection inherits it. Note the parameter only registers after pgvector is
-  loaded in the session.
-- **GIN index on a generated `tsvector` column** for the full-text (sparse)
-  side of hybrid search.
+- **HNSW index on the embedding column** using `vector_cosine_ops` (cosine distance, matching the normalized `bge-large` embeddings). Without it, every query scans the whole table.
+- **`hnsw.ef_search` must be raised from its default of 40.** HNSW is an approximate index, and the default explores too little of the graph for `k=20`, which measurably lowers recall versus exact search. It is set at the role or database level (`ALTER ROLE ... SET hnsw.ef_search = 200`) so every connection inherits it. Note the parameter only registers after pgvector is loaded in the session.
+- **GIN index on a generated `tsvector` column** for the full-text (sparse) side of hybrid search.
 
 ## Challenges & Lessons Learned
 
-**The vector store had no index, so every query was a full scan.** Migrating from ChromaDB to raw PGVector meant owning the index layer that a managed store hides. Queries silently did brute-force search over every embedding until they grew slow enough to time out. Adding an HNSW index fixed it, but HNSW is approximate: at the default `ef_search` of 40, recall dropped versus exact search, and raising it to 200 was needed to recover. The lesson: a vector database gives you storage, not retrieval quality. The index and its search parameters are yours to own and tune.
+**A vector database gives you storage, not retrieval quality.**
+Migrating from ChromaDB to raw PGVector meant owning the index layer a managed store hides. Queries silently ran brute-force scans over every embedding until they grew slow enough to time out. Adding an HNSW index fixed the scan, but HNSW is approximate: at the default `ef_search` of 40, recall dropped versus exact search, and raising it to 200 was needed to recover. The index and its search parameters are yours to own and tune.
 
-**Format-aware chunking, learned the hard way.** A single character splitter is not enough for arbitrary uploads. HTML and Markdown arrived through Tika with their heading structure already stripped, so a header-based splitter saw no headers and returned an entire document as one chunk. A spreadsheet loaded as a whole sheet became one 7,000-character chunk that blew the generation token budget. Each format needed its own path (raw read plus structure-aware splitting for HTML and Markdown, row-wise loading for spreadsheets), and every path needed a recursive size cap as a backstop. The rule that emerged: every ingestion path must end in a size guarantee, because a specialized loader will always eventually hand you something oversized.
+**Every ingestion path must end in a size guarantee.**
+A single character splitter is not enough for arbitrary uploads. HTML and Markdown arrived through Tika with their heading structure already stripped, so a header-based splitter saw no headers and returned a whole document as one chunk. A spreadsheet loaded as a whole sheet became one 7,000-character chunk that blew the generation token budget. Each format needed its own path (raw read plus structure-aware splitting for HTML and Markdown, row-wise loading for spreadsheets), and every path needed a recursive size cap as a backstop, because a specialized loader will eventually hand you something oversized.
 
-**Spreadsheets are a lookup tool, not an analytics tool.** Row-wise chunking answers "find the record where X" but structurally cannot answer "what is the total" or "which is highest," because no single retrieved chunk holds the answer and vector search cannot aggregate. This is a documented limitation, not a bug, and the honest fix for analytical questions is a text-to-SQL layer, which is out of scope for a document-QA system.
+**Spreadsheets are a lookup tool, not an analytics tool.**
+Row-wise chunking answers "find the record where X" but structurally cannot answer "what is the total" or "which is highest," because no single retrieved chunk holds the answer and vector search cannot aggregate. This is a documented limitation, not a bug. The honest fix for analytical questions is a text-to-SQL layer, which is out of scope for a document-QA system.
 
-**A model deprecation forced a migration mid-project.** The generation model (Groq's Llama 3.3 70B) was scheduled for retirement, so the pipeline moved to GPT-OSS 120B. The replacement was chosen by re-running the evaluation harness on the new model rather than by reputation, and the switch was clean because generation was already isolated behind a factory function.
+**Choose the replacement model with the harness, not the reputation.**
+When the generation model (Groq's Llama 3.3 70B) was scheduled for retirement, the pipeline moved to GPT-OSS 120B. The replacement was picked by re-running the evaluation harness on the new model, not by benchmark reputation, and the switch was clean because generation was already isolated behind a factory function.
 
-**Clean extraction is a retrieval concern, not cosmetics.** Raw Tika output carried tabs, non-breaking spaces, PDF hyphenation splits (`vesi-\ncles`), and soft line breaks mid-sentence. Split words and broken sentences fail to match at retrieval time. Normalizing text before chunking is a small change with a direct effect on embedding quality, and it was only visible because the eval harness surfaced retrieval failures.
+**Clean extraction is a retrieval concern, not cosmetics.**
+Raw Tika output carried tabs, non-breaking spaces, PDF hyphenation splits (`vesi-\ncles`), and soft line breaks mid-sentence. Split words and broken sentences fail to match at retrieval time. Normalizing text before chunking is a small change with a direct effect on embedding quality, and it was only visible because the eval harness surfaced the retrieval failures.
 
-**Over-refusal was a prompt problem, not a noise problem.** The default RetrievalQA prompt was too conservative, refusing whenever the answer was not stated word-for-word. Cleaning the text did not reduce refusals; rewriting the prompt to permit partial and rephrased context did.
+**Over-refusal was a prompt problem, not a noise problem.**
+The default RetrievalQA prompt was too conservative, refusing whenever the answer was not stated word-for-word. Cleaning the text did not reduce refusals. Rewriting the prompt to permit partial and rephrased context did.
 
-**Apache Tika JVM warm-up.** Spawning a fresh JVM per request caused unacceptable cold-start latency. Running a long-lived Tika server and proxying to it cut parse time from seconds to milliseconds. Tika is fast when warm, slow when treated like a CLI tool.
+**Tika is fast when warm, slow when treated like a CLI tool.**
+Spawning a fresh JVM per request caused unacceptable cold-start latency. Running a long-lived Tika server and proxying to it cut parse time from seconds to milliseconds.
 
 ## Status
 
