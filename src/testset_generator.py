@@ -1,4 +1,5 @@
 # imports for synthetic QA Dataset Generation
+import time
 from collections import defaultdict
 from src.eval_models import *
 from src.eval_config import TEST_DATA_PATH, CHUNK_SIZE, OVERLAP
@@ -70,4 +71,5 @@ def create_test_set(docs, file_path):
 if __name__ == "__main__":
     print("Generating test set...")
     docs = create_doc_set()
+    time.sleep(10800)
     create_test_set(docs, "evaluation/testset/new_testset.jsonl")
