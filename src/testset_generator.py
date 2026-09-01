@@ -71,5 +71,4 @@ def create_test_set(docs, file_path):
 if __name__ == "__main__":
     print("Generating test set...")
     docs = create_doc_set()
-    time.sleep(10800)
     create_test_set(docs, "evaluation/testset/new_testset.jsonl")
