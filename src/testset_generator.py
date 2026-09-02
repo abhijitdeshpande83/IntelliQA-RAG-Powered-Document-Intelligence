@@ -1,4 +1,5 @@
 # imports for synthetic QA Dataset Generation
+import time
 from collections import defaultdict
 from src.eval_models import *
 from src.eval_config import TEST_DATA_PATH, CHUNK_SIZE, OVERLAP
