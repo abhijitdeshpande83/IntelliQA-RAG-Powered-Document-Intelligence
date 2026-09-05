@@ -16,7 +16,7 @@ HYBRID_WEIGHTS = (
                     0.6  # PGVector
                 )
 HYBRID_SEARCH_ENABLE = False
-RERANK_ENABLE=True
+RERANK_ENABLE=False
 RETURN_METADATA = True
 
 COLLECTION_NAME = "document_embeddings"
@@ -32,10 +32,10 @@ class RetrievalConfig:
 
 
 TEST_DATA_PATH = "evaluation/eval_data"
-QA_TESTSET_PATH = "evaluation/testset/new_testset_rewritten.jsonl"
+QA_TESTSET_PATH = "evaluation/testset/new_testset.jsonl"
 
-RAG_GENERATION_OUTPUT_PATH = "evaluation/rag_results/rag_results_v12.jsonl"
-RAG_EVALUATION_OUTPUT_PATH = "evaluation/eval_results/rag_eval_v12.jsonl"
+RAG_GENERATION_OUTPUT_PATH = "evaluation/rag_results/rag_results_baseline.jsonl"
+RAG_EVALUATION_OUTPUT_PATH = "evaluation/eval_results/rag_results_baseline.jsonl"
 
 MAX_WORKERS = 1
 TIMEOUT = 180
