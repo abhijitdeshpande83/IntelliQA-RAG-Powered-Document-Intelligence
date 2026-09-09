@@ -78,5 +78,5 @@ def get_reranker(top_n=RERANK_TOP_N):
     """
     return CrossEncoderReranker(
                     model=get_cross_encoder(),
-                    top_n=RERANK_TOP_N
+                    top_n=top_n
                     )
