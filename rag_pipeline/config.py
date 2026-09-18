@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 LLM_MODEL = "openai/gpt-oss-120b"
 EMBEDDING_MODEL = "BAAI/bge-large-en-v1.5"
-RERANKER_MODEL = "BAAI/bge-reranker-v2-m3"
+RERANKER_MODEL = "BAAI/bge-reranker-base"
 
 TEMPERATURE = 0
 CHUNK_SIZE = 1024
