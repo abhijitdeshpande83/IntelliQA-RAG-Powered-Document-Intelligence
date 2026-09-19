@@ -5,8 +5,8 @@ LLM_GENERATOR = "openai/gpt-oss-120b"
 EMBEDDING_MODEL = "BAAI/bge-large-en-v1.5"
 
 TEMPERATURE = 0
-CHUNK_SIZE = 1024
-OVERLAP = 256
+CHUNK_SIZE = 1500
+OVERLAP = 375
 BATCH_SIZE = 250
 RETRIEVAL_K = 20
 RERANK_TOP_N = 20
@@ -34,10 +34,10 @@ class RetrievalConfig:
 TEST_DATA_PATH = "evaluation/eval_data"
 QA_TESTSET_PATH = "evaluation/testset/new_testset.jsonl"
 
-RAG_GENERATION_OUTPUT_PATH = "evaluation/rag_results/rag_results_v2.jsonl"
-RAG_EVALUATION_OUTPUT_PATH = "evaluation/eval_results/rag_results_v2.jsonl"
+RAG_GENERATION_OUTPUT_PATH = "evaluation/rag_results/rag_results_v5.jsonl"
+RAG_EVALUATION_OUTPUT_PATH = "evaluation/eval_results/rag_results_v5.jsonl"
 
 MAX_WORKERS = 1
 TIMEOUT = 180
 
-TIME_SLEEP=0
+TIME_SLEEP=3600
