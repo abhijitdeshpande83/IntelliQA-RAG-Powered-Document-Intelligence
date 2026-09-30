@@ -8,7 +8,7 @@ from rag_pipeline.query_engine import vectorstore
 df = pd.read_json(QA_TESTSET_PATH, orient="records", lines=True)
 
 test_set = df.sample(n=50, random_state=0)
-
+print(f"Sampled {len(test_set)} questions for RAG response generation.")
 vectorstore_db = vectorstore()
 
 def main(config:RetrievalConfig):
