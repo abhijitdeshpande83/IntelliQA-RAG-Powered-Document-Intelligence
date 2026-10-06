@@ -9,7 +9,7 @@ CHUNK_SIZE = 1024
 OVERLAP = 256
 BATCH_SIZE = 250
 RETRIEVAL_K = 20
-RERANK_TOP_N = 8
+RERANK_TOP_N = 10
 SEARCH_TYPE = "similarity"
 HYBRID_WEIGHTS = (
                     0.4, # PostgreSQL FTS
@@ -32,10 +32,10 @@ class RetrievalConfig:
 
 
 TEST_DATA_PATH = "evaluation/eval_data"
-QA_TESTSET_PATH = "evaluation/testset/new_testset_rewritten.jsonl"
+QA_TESTSET_PATH = "evaluation/testset/new_testset.jsonl"
 
-RAG_GENERATION_OUTPUT_PATH = "evaluation/rag_results/rag_results_v12.jsonl"
-RAG_EVALUATION_OUTPUT_PATH = "evaluation/eval_results/rag_eval_v12.jsonl"
+RAG_GENERATION_OUTPUT_PATH = "evaluation/rag_results/rag_results_v10.jsonl"
+RAG_EVALUATION_OUTPUT_PATH = "evaluation/eval_results/rag_results_v10.jsonl"
 
 MAX_WORKERS = 1
 TIMEOUT = 180
