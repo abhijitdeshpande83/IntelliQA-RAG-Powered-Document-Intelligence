@@ -2,14 +2,14 @@ from dataclasses import dataclass
 
 LLM_MODEL = "openai/gpt-oss-120b"
 EMBEDDING_MODEL = "BAAI/bge-large-en-v1.5"
-RERANKER_MODEL = "BAAI/bge-reranker-base"
+RERANKER_MODEL = "BAAI/bge-reranker-v2-m3"
 
 TEMPERATURE = 0
 CHUNK_SIZE = 1024
 OVERLAP = 256
 BATCH_SIZE = 250
 RETRIEVAL_K = 20
-RERANK_TOP_N = 8
+RERANK_TOP_N = 10
 SEARCH_TYPE = "similarity"
 HYBRID_WEIGHTS = (
                     0.4, # PostgreSQL FTS
@@ -20,8 +20,6 @@ RERANK_ENABLE=True
 RETURN_METADATA = False
 
 COLLECTION_NAME = "document_embeddings"
-
-MAX_TABULAR_ROWS = 5000
 
 @dataclass
 class RetrievalConfig:
